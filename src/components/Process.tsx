@@ -7,34 +7,32 @@ export function Process() {
     {
       icon: MessageSquare,
       number: '01',
-      title: 'Diagnostic & Brief',
-      description: 'Analyse de vos besoins, objectifs et contraintes. Discussion sur votre vision et vos attentes.',
+      title: 'Diagnosis & Brief',
+      description: 'Analysis of your needs, goals, and constraints. Discussion about your vision and expectations.',
       duration: '30-60 min'
     },
     {
       icon: Lightbulb,
       number: '02',
       title: 'Storyboard & Concept',
-      description: 'Création du storyboard, définition du style visuel et validation de la direction créative.',
-      duration: '2-3 jours'
+      description: 'Storyboard creation, visual style definition, and creative direction validation.',
+      duration: '2-3 days'
     },
     {
       icon: CheckCircle,
       number: '03',
       title: 'Validation',
-      description: 'Présentation du concept, ajustements selon vos retours et validation finale avant production.',
-      duration: '1-2 jours'
+      description: 'Concept presentation, adjustments based on your feedback, and final validation before production.',
+      duration: '1-2 days'
     },
     {
-      icon: Video ,
-            icon: Rocket,
-
+      icon: Rocket,
       number: '04',
-      title: 'Production & Montage &Livraison',
-      description: 'Montage vidéo, motion design, color grading, mixage audio - création de votre vidéo finale. Révisions finales, export dans tous les formats nécessaires et livraison de vos fichiers.',
-      duration: '3-7 jours'
+      title: 'Production, Editing & Delivery',
+      description: 'Video editing, motion design, color grading, audio mixing - creation of your final video. Final revisions, export in all necessary formats, and delivery of your files.',
+      duration: '3-7 days'
     },
-      ];
+  ];
 
   return (
     <section id="processus" className="py-16 sm:py-24 bg-zinc-900 relative overflow-hidden">
@@ -52,13 +50,13 @@ export function Process() {
           className="text-center mb-16"
         >
           <div className="inline-block px-4 py-2 bg-white/10 border border-white/20 rounded-full text-white mb-4">
-            Notre Processus
+            Our Process
           </div>
           <h2 className="text-white mb-4">
-            De l'idée à la vidéo finale
+            From Idea to Final Video
           </h2>
           <p className="text-zinc-400 text-xl max-w-2xl mx-auto">
-            Un processus clair et efficace pour garantir la réussite de votre projet
+            A clear and efficient process to ensure the success of your project
           </p>
         </motion.div>
 
@@ -75,9 +73,8 @@ export function Process() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className={`relative flex flex-col lg:flex-row gap-8 items-center ${
-                  index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'
-                }`}
+                className={`relative flex flex-col lg:flex-row gap-8 items-center ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'
+                  }`}
               >
                 {/* Content */}
                 <div className={`flex-1 ${index % 2 === 0 ? 'lg:text-right' : 'lg:text-left'} text-center lg:text-inherit`}>
@@ -118,15 +115,15 @@ export function Process() {
           className="mt-20 text-center"
         >
           <div className="inline-block p-8 bg-gradient-to-br from-zinc-900 to-zinc-900/50 border border-zinc-800 rounded-2xl">
-            <h3 className="text-white mb-3">Prêt à démarrer votre projet ?</h3>
+            <h3 className="text-white mb-3">Ready to start your project?</h3>
             <p className="text-zinc-400 mb-6 max-w-lg">
-              Réservez un appel gratuit pour discuter de votre projet et obtenir un devis personnalisé
+              Book a free call to discuss your project and get a personalized quote
             </p>
             <a
               href="#contact"
               className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black rounded-lg hover:bg-zinc-100 transition-colors"
             >
-              Réserver mon appel gratuit
+              Book My Free Call
               <Rocket className="w-5 h-5" />
             </a>
           </div>

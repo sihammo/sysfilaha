@@ -1,4 +1,4 @@
- import React from 'react';
+import React from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Play, Sparkles } from 'lucide-react';
 
@@ -18,21 +18,21 @@ export function Hero() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/10 border border-white/20 rounded-full text-white mb-6 sm:mb-8">
             <Sparkles className="w-4 h-4" />
-            <span className="text-xs sm:text-sm">Studio de montage vidéo & motion design</span>
+            <span className="text-xs sm:text-sm">Video Editing & Motion Design Studio</span>
           </div>
 
           {/* Main Heading */}
           <h1 className="text-white mb-4 sm:mb-6 max-w-4xl mx-auto text-4xl sm:text-5xl lg:text-6xl">
-            Transformez vos idées en{' '}
+            Transform your ideas into{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-zinc-300">
-              vidéos percutantes
+              impactful videos
             </span>
           </h1>
 
           {/* Subheading */}
           <p className="text-zinc-400 text-base sm:text-lg lg:text-xl max-w-2xl mx-auto mb-8 sm:mb-12 px-4">
-            Montage vidéo professionnel, motion design & vidéos explicatives pour SaaS, 
-            Coaches, YouTubeurs et Content Creators qui veulent captiver leur audience
+            Professional video editing, motion design & explainer videos for SaaS,
+            Coaches, YouTubers, and Content Creators who want to captivate their audience
           </p>
 
           {/* CTA Buttons */}
@@ -41,27 +41,26 @@ export function Hero() {
               href="#contact"
               className="group px-6 sm:px-8 py-3 sm:py-4 bg-white text-black rounded-lg hover:bg-zinc-100 transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-white/20 hover:shadow-white/40 text-sm sm:text-base"
             >
-              Réserver un appel gratuit
-              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
+              HIRE ME              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
             </a>
-            
+
             <a
               href="#Portfolio"
               className="group px-6 sm:px-8 py-3 sm:py-4 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700 transition-all duration-300 flex items-center justify-center gap-2 border border-zinc-700 text-sm sm:text-base"
             >
               <Play className="w-4 h-4 sm:w-5 sm:h-5" />
-              Voir nos réalisations
+              View Our Work
             </a>
-            
+
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 mt-12 sm:mt-20 max-w-4xl mx-auto px-4">
             {[
-              { value: '150+', label: 'Vidéos produites' },
-              { value: '150+', label: 'Clients satisfaits' },
-              { value: '72h', label: 'Délai moyen' },
-              { value: '99%', label: 'Taux satisfaction' },
+              { value: '150+', label: 'Videos produced' },
+              { value: '150+', label: 'Satisfied clients' },
+              { value: '72h', label: 'Average turnaround' },
+              { value: '99%', label: 'Satisfaction rate' },
             ].map((stat, index) => (
               <motion.div
                 key={index}
@@ -85,4 +84,3 @@ export function Hero() {
   );
 }
 
- 

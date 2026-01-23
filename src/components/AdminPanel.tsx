@@ -26,12 +26,12 @@ export function AdminPanel() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(false);
   const [editingVideo, setEditingVideo] = useState<Video | null>(null);
-  
+
   const [newVideo, setNewVideo] = useState({
     title: '',
     description: '',
     videoId: '',
-    category: 'Montage Vidéo',
+    category: 'Video Editing',
     client: '',
     duration: '',
     type: 'YouTube',
@@ -39,14 +39,14 @@ export function AdminPanel() {
     views: 0,
     engagement: 0
   });
-  
+
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const ADMIN_EMAIL = 'redareda@reda.com';
   const ADMIN_PASSWORD = 'redamotiondevbymehdi';
   const ADMIN_TOKEN = 'reda_admin_token';
-  const API_URL = 'https://script.google.com/macros/s/AKfycbw7mSVik3V9LtclhEa6wulBrxlRHwDBazD9Ct08Olv2FyXUw7ogxxxVvdH57Pdy2As8/exec';
+  const API_URL = 'https://script.google.com/macros/s/AKfycbzPW0PvdToWVJ2qw3TSHBDPTJB_gv16eUUEytpCi_rqJJAeySK1KZDYWWU3UIrcELNI/exec';
 
   // Fetch videos from Google Sheets
   const fetchVideos = async () => {
@@ -58,7 +58,7 @@ export function AdminPanel() {
       );
       const data = await response.json();
       console.log('Fetched videos:', data); // Debug log
-      
+
       if (data.success) {
         // Add thumbnail and videoUrl based on videoId
         const videosWithMedia = data.videos.map((video: any) => ({
@@ -69,11 +69,11 @@ export function AdminPanel() {
         setVideos(videosWithMedia);
         setError('');
       } else {
-        setError(data.message || 'Erreur lors du chargement des vidéos');
+        setError(data.message || 'Error loading videos');
       }
     } catch (error) {
       console.error('Error fetching videos:', error);
-      setError('Erreur de connexion au serveur. Vérifiez votre connexion internet.');
+      setError('Connection error. Check your internet connection.');
     } finally {
       setLoading(false);
     }
@@ -102,17 +102,17 @@ export function AdminPanel() {
   const extractYouTubeId = (url: string) => {
     if (!url) return '';
     if (url.length === 11 && !url.includes('/')) return url;
-    
+
     const patterns = [
       /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
       /^([a-zA-Z0-9_-]{11})$/
     ];
-    
+
     for (const pattern of patterns) {
       const match = url.match(pattern);
       if (match) return match[1];
     }
-    
+
     return url;
   };
 
@@ -120,11 +120,11 @@ export function AdminPanel() {
     e.preventDefault();
     setError('');
     setSuccess('');
-    
+
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
       setIsAuthenticated(true);
     } else {
-      setError('Email ou mot de passe incorrect');
+      setError('Incorrect email or password');
     }
   };
 
@@ -138,7 +138,7 @@ export function AdminPanel() {
       title: '',
       description: '',
       videoId: '',
-      category: 'Montage Vidéo',
+      category: 'Video Editing',
       client: '',
       duration: '',
       type: 'YouTube',
@@ -154,12 +154,12 @@ export function AdminPanel() {
 
   const handleAddVideo = async () => {
     if (!newVideo.title.trim()) {
-      setError('Le titre est requis');
+      setError('Title is required');
       return;
     }
-    
+
     if (!newVideo.videoId.trim()) {
-      setError('Le Video ID est requis');
+      setError('Video ID is required');
       return;
     }
 
@@ -169,11 +169,11 @@ export function AdminPanel() {
 
     try {
       console.log('Adding video:', newVideo); // Debug log
-      
+
       const response = await fetch(API_URL, {
         method: 'POST',
         mode: 'no-cors', // FIXED: Add no-cors mode for Google Apps Script
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
@@ -195,17 +195,17 @@ export function AdminPanel() {
 
       // FIXED: Handle response differently for no-cors mode
       console.log('Response status:', response.status);
-      
+
       // Since we're using no-cors, we can't read the response
       // But we can assume it worked if no error
-      setSuccess('✅ Vidéo ajoutée avec succès');
-      
+      setSuccess('✅ Video added successfully');
+
       // Reset form
       setNewVideo({
         title: '',
         description: '',
         videoId: '',
-        category: 'Montage Vidéo',
+        category: 'Video Editing',
         client: '',
         duration: '',
         type: 'YouTube',
@@ -213,18 +213,18 @@ export function AdminPanel() {
         views: 0,
         engagement: 0
       });
-      
+
       // Refresh videos list after a short delay
       setTimeout(() => {
         fetchVideos();
       }, 1000);
-      
+
       // Notify portfolio to refresh
       window.dispatchEvent(new CustomEvent('portfolioRefresh'));
-      
+
     } catch (error) {
       console.error('Error adding video:', error);
-      setError('Erreur lors de l\'ajout. Vérifiez la console pour plus de détails.');
+      setError('Error while adding. Check console for details.');
     } finally {
       setLoading(false);
     }
@@ -232,14 +232,14 @@ export function AdminPanel() {
 
   const handleUpdateVideo = async () => {
     if (!editingVideo) return;
-    
+
     if (!editingVideo.title.trim()) {
-      setError('Le titre est requis');
+      setError('Title is required');
       return;
     }
-    
+
     if (!editingVideo.videoId.trim()) {
-      setError('Le Video ID est requis');
+      setError('Video ID is required');
       return;
     }
 
@@ -249,11 +249,11 @@ export function AdminPanel() {
 
     try {
       console.log('Updating video:', editingVideo);
-      
+
       const response = await fetch(API_URL, {
         method: 'POST',
         mode: 'no-cors',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
@@ -275,27 +275,27 @@ export function AdminPanel() {
       });
 
       console.log('Update response status:', response.status);
-      
-      setSuccess('✅ Vidéo mise à jour avec succès');
+
+      setSuccess('✅ Video updated successfully');
       setEditingVideo(null);
-      
+
       // Refresh videos list
       setTimeout(() => {
         fetchVideos();
       }, 1000);
-      
+
       window.dispatchEvent(new CustomEvent('portfolioRefresh'));
-      
+
     } catch (error) {
       console.error('Error updating video:', error);
-      setError('Erreur lors de la mise à jour');
+      setError('Error while updating');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteVideo = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette vidéo ?')) return;
+    if (!confirm('Are you sure you want to delete this video?')) return;
 
     setLoading(true);
     setError('');
@@ -303,11 +303,11 @@ export function AdminPanel() {
 
     try {
       console.log('Deleting video ID:', id);
-      
+
       const response = await fetch(API_URL, {
         method: 'POST',
         mode: 'no-cors',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
@@ -319,19 +319,19 @@ export function AdminPanel() {
       });
 
       console.log('Delete response status:', response.status);
-      
-      setSuccess('✅ Vidéo supprimée avec succès');
-      
+
+      setSuccess('✅ Video deleted successfully');
+
       // Refresh videos list
       setTimeout(() => {
         fetchVideos();
       }, 1000);
-      
+
       window.dispatchEvent(new CustomEvent('portfolioRefresh'));
-      
+
     } catch (error) {
       console.error('Error deleting video:', error);
-      setError('Erreur lors de la suppression');
+      setError('Error while deleting');
     } finally {
       setLoading(false);
     }
@@ -428,7 +428,7 @@ export function AdminPanel() {
           <div className="flex items-center justify-between p-6 border-b border-zinc-800">
             <div className="flex items-center gap-3">
               <Lock className="w-6 h-6 text-purple-500" />
-              <h2 className="text-white text-2xl">Admin Panel - Portfolio Vidéos</h2>
+              <h2 className="text-white text-2xl">Admin Panel - Video Portfolio</h2>
             </div>
             <button
               onClick={handleClose}
@@ -445,8 +445,8 @@ export function AdminPanel() {
               <div className="max-w-md mx-auto">
                 <div className="text-center mb-8">
                   <Lock className="w-16 h-16 text-purple-500 mx-auto mb-4" />
-                  <h3 className="text-white text-xl mb-2">Connexion Admin</h3>
-                  <p className="text-zinc-400">Veuillez vous connecter pour continuer</p>
+                  <h3 className="text-white text-xl mb-2">Admin Login</h3>
+                  <p className="text-zinc-400">Please log in to continue</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-4">
@@ -463,7 +463,7 @@ export function AdminPanel() {
                   </div>
 
                   <div>
-                    <label className="block text-zinc-300 mb-2">Mot de passe</label>
+                    <label className="block text-zinc-300 mb-2">Password</label>
                     <input
                       type="password"
                       value={password}
@@ -484,7 +484,7 @@ export function AdminPanel() {
                     type="submit"
                     className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300"
                   >
-                    Se connecter
+                    Log In
                   </button>
                 </form>
               </div>
@@ -494,8 +494,8 @@ export function AdminPanel() {
                 {/* Header with actions */}
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-white text-xl">Gestion du Portfolio</h3>
-                    <p className="text-zinc-400 text-sm">{videos.length} vidéos dans la base de données</p>
+                    <h3 className="text-white text-xl">Portfolio Management</h3>
+                    <p className="text-zinc-400 text-sm">{videos.length} videos in database</p>
                     <p className="text-zinc-500 text-xs mt-1">
                       API: {API_URL.substring(0, 30)}...
                     </p>
@@ -507,14 +507,14 @@ export function AdminPanel() {
                       className="flex items-center gap-2 px-4 py-2 bg-zinc-800 text-zinc-300 rounded-lg hover:bg-zinc-700 transition-colors disabled:opacity-50"
                     >
                       <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                      Actualiser
+                      Refresh
                     </button>
                     <button
                       onClick={handleLogout}
                       className="flex items-center gap-2 px-4 py-2 bg-zinc-800 text-zinc-300 rounded-lg hover:bg-zinc-700 transition-colors"
                     >
                       <LogOut className="w-4 h-4" />
-                      Déconnexion
+                      Log Out
                     </button>
                   </div>
                 </div>
@@ -536,21 +536,21 @@ export function AdminPanel() {
                 <div id="video-form" className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-6">
                   <h4 className="text-white mb-4 flex items-center gap-2">
                     <Plus className="w-5 h-5" />
-                    {editingVideo ? 'Modifier la vidéo' : 'Ajouter une vidéo'}
+                    {editingVideo ? 'Edit video' : 'Add a video'}
                   </h4>
 
                   <div className="grid md:grid-cols-2 gap-4 mb-4">
                     <div>
-                      <label className="block text-zinc-300 mb-2 text-sm">Titre *</label>
+                      <label className="block text-zinc-300 mb-2 text-sm">Title *</label>
                       <input
                         type="text"
                         value={editingVideo ? editingVideo.title : newVideo.title}
-                        onChange={(e) => editingVideo 
-                          ? setEditingVideo({...editingVideo, title: e.target.value})
-                          : setNewVideo({...newVideo, title: e.target.value})
+                        onChange={(e) => editingVideo
+                          ? setEditingVideo({ ...editingVideo, title: e.target.value })
+                          : setNewVideo({ ...newVideo, title: e.target.value })
                         }
                         className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
-                        placeholder="Nom de la vidéo"
+                        placeholder="Video name"
                         required
                       />
                     </div>
@@ -560,11 +560,11 @@ export function AdminPanel() {
                       <textarea
                         value={editingVideo ? editingVideo.description : newVideo.description}
                         onChange={(e) => editingVideo
-                          ? setEditingVideo({...editingVideo, description: e.target.value})
-                          : setNewVideo({...newVideo, description: e.target.value})
+                          ? setEditingVideo({ ...editingVideo, description: e.target.value })
+                          : setNewVideo({ ...newVideo, description: e.target.value })
                         }
                         className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
-                        placeholder="Description de la vidéo"
+                        placeholder="Video description"
                         rows={2}
                       />
                     </div>
@@ -575,33 +575,33 @@ export function AdminPanel() {
                         type="text"
                         value={editingVideo ? editingVideo.videoId : newVideo.videoId}
                         onChange={(e) => editingVideo
-                          ? setEditingVideo({...editingVideo, videoId: e.target.value})
-                          : setNewVideo({...newVideo, videoId: e.target.value})
+                          ? setEditingVideo({ ...editingVideo, videoId: e.target.value })
+                          : setNewVideo({ ...newVideo, videoId: e.target.value })
                         }
                         className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
-                        placeholder="dQw4w9WgXcQ ou URL YouTube"
+                        placeholder="dQw4w9WgXcQ or YouTube URL"
                         required
                       />
                       <p className="text-zinc-500 text-xs mt-1">
-                        Exemple: dQw4w9WgXcQ ou https://youtube.com/watch?v=dQw4w9WgXcQ
+                        Example: dQw4w9WgXcQ or https://youtube.com/watch?v=dQw4w9WgXcQ
                       </p>
                     </div>
 
                     <div>
-                      <label className="block text-zinc-300 mb-2 text-sm">Catégorie</label>
+                      <label className="block text-zinc-300 mb-2 text-sm">Category</label>
                       <select
                         value={editingVideo ? editingVideo.category : newVideo.category}
                         onChange={(e) => editingVideo
-                          ? setEditingVideo({...editingVideo, category: e.target.value})
-                          : setNewVideo({...newVideo, category: e.target.value})
+                          ? setEditingVideo({ ...editingVideo, category: e.target.value })
+                          : setNewVideo({ ...newVideo, category: e.target.value })
                         }
                         className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
                       >
-                        <option>Montage Vidéo</option>
+                        <option>Video Editing</option>
                         <option>Motion Design</option>
-                        <option>Vidéos Explicatives</option>
+                        <option>Explainer Videos</option>
                         <option>Color Grading</option>
-                        <option>Publicité</option>
+                        <option>Advertising</option>
                         <option>Animation</option>
                       </select>
                     </div>
@@ -612,22 +612,22 @@ export function AdminPanel() {
                         type="text"
                         value={editingVideo ? editingVideo.client : newVideo.client}
                         onChange={(e) => editingVideo
-                          ? setEditingVideo({...editingVideo, client: e.target.value})
-                          : setNewVideo({...newVideo, client: e.target.value})
+                          ? setEditingVideo({ ...editingVideo, client: e.target.value })
+                          : setNewVideo({ ...newVideo, client: e.target.value })
                         }
                         className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
-                        placeholder="Nom du client"
+                        placeholder="Client name"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-zinc-300 mb-2 text-sm">Durée</label>
+                      <label className="block text-zinc-300 mb-2 text-sm">Duration</label>
                       <input
                         type="text"
                         value={editingVideo ? editingVideo.duration : newVideo.duration}
                         onChange={(e) => editingVideo
-                          ? setEditingVideo({...editingVideo, duration: e.target.value})
-                          : setNewVideo({...newVideo, duration: e.target.value})
+                          ? setEditingVideo({ ...editingVideo, duration: e.target.value })
+                          : setNewVideo({ ...newVideo, duration: e.target.value })
                         }
                         className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
                         placeholder="2:30"
@@ -639,8 +639,8 @@ export function AdminPanel() {
                       <select
                         value={editingVideo ? editingVideo.type : newVideo.type}
                         onChange={(e) => editingVideo
-                          ? setEditingVideo({...editingVideo, type: e.target.value})
-                          : setNewVideo({...newVideo, type: e.target.value})
+                          ? setEditingVideo({ ...editingVideo, type: e.target.value })
+                          : setNewVideo({ ...newVideo, type: e.target.value })
                         }
                         className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
                       >
@@ -648,18 +648,18 @@ export function AdminPanel() {
                         <option>Vimeo</option>
                         <option>Instagram</option>
                         <option>TikTok</option>
-                        <option>Autre</option>
+                        <option>Other</option>
                       </select>
                     </div>
 
                     <div>
-                      <label className="block text-zinc-300 mb-2 text-sm">Longueur (secondes)</label>
+                      <label className="block text-zinc-300 mb-2 text-sm">Length (seconds)</label>
                       <input
                         type="number"
                         value={editingVideo ? editingVideo.videoLength : newVideo.videoLength}
                         onChange={(e) => editingVideo
-                          ? setEditingVideo({...editingVideo, videoLength: e.target.value})
-                          : setNewVideo({...newVideo, videoLength: e.target.value})
+                          ? setEditingVideo({ ...editingVideo, videoLength: e.target.value })
+                          : setNewVideo({ ...newVideo, videoLength: e.target.value })
                         }
                         className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
                         placeholder="150"
@@ -667,13 +667,13 @@ export function AdminPanel() {
                     </div>
 
                     <div>
-                      <label className="block text-zinc-300 mb-2 text-sm">Vues</label>
+                      <label className="block text-zinc-300 mb-2 text-sm">Views</label>
                       <input
                         type="number"
                         value={editingVideo ? editingVideo.views : newVideo.views}
                         onChange={(e) => editingVideo
-                          ? setEditingVideo({...editingVideo, views: parseInt(e.target.value) || 0})
-                          : setNewVideo({...newVideo, views: parseInt(e.target.value) || 0})
+                          ? setEditingVideo({ ...editingVideo, views: parseInt(e.target.value) || 0 })
+                          : setNewVideo({ ...newVideo, views: parseInt(e.target.value) || 0 })
                         }
                         className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
                         placeholder="1000"
@@ -690,8 +690,8 @@ export function AdminPanel() {
                         onChange={(e) => {
                           const value = Math.min(100, Math.max(0, parseInt(e.target.value) || 0));
                           editingVideo
-                            ? setEditingVideo({...editingVideo, engagement: value})
-                            : setNewVideo({...newVideo, engagement: value})
+                            ? setEditingVideo({ ...editingVideo, engagement: value })
+                            : setNewVideo({ ...newVideo, engagement: value })
                         }}
                         className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
                         placeholder="85"
@@ -708,14 +708,14 @@ export function AdminPanel() {
                           className="px-6 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-300 flex items-center gap-2 disabled:opacity-50"
                         >
                           <Save className="w-4 h-4" />
-                          {loading ? 'Mise à jour...' : 'Mettre à jour'}
+                          {loading ? 'Updating...' : 'Update'}
                         </button>
                         <button
                           onClick={handleCancelEdit}
                           className="px-6 py-2 bg-zinc-700 text-white rounded-lg hover:bg-zinc-600 transition-all duration-300"
                           disabled={loading}
                         >
-                          Annuler
+                          Cancel
                         </button>
                       </>
                     ) : (
@@ -725,7 +725,7 @@ export function AdminPanel() {
                         className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 flex items-center gap-2 disabled:opacity-50"
                       >
                         <Save className="w-4 h-4" />
-                        {loading ? 'Ajout en cours...' : 'Ajouter la vidéo'}
+                        {loading ? 'Adding...' : 'Add Video'}
                       </button>
                     )}
                     <button
@@ -733,7 +733,7 @@ export function AdminPanel() {
                       className="px-6 py-2 bg-zinc-700 text-white rounded-lg hover:bg-zinc-600 transition-all duration-300"
                       disabled={loading}
                     >
-                      Réinitialiser
+                      Reset
                     </button>
                   </div>
                 </div>
@@ -741,18 +741,18 @@ export function AdminPanel() {
                 {/* Videos List */}
                 <div>
                   <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-white">Vidéos actuelles ({videos.length})</h4>
+                    <h4 className="text-white">Current Videos ({videos.length})</h4>
                     {loading && (
                       <div className="text-zinc-400 text-sm flex items-center gap-2">
                         <RefreshCw className="w-4 h-4 animate-spin" />
-                        Chargement...
+                        Loading...
                       </div>
                     )}
                   </div>
-                  
+
                   {videos.length === 0 ? (
                     <div className="text-center py-8 text-zinc-400">
-                      {loading ? 'Chargement des vidéos...' : 'Aucune vidéo dans la base de données. Ajoutez-en une !'}
+                      {loading ? 'Loading videos...' : 'No videos in database. Add one!'}
                     </div>
                   ) : (
                     <div className="grid md:grid-cols-2 gap-4">
@@ -780,7 +780,7 @@ export function AdminPanel() {
                               )}
                               {(video.views > 0 || video.engagement > 0) && (
                                 <p className="text-zinc-600 text-xs mb-2">
-                                  {video.views > 0 && `${video.views} vues`}
+                                  {video.views > 0 && `${video.views} views`}
                                   {video.views > 0 && video.engagement > 0 && ' • '}
                                   {video.engagement > 0 && `${video.engagement}% engagement`}
                                 </p>
@@ -791,7 +791,7 @@ export function AdminPanel() {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-purple-400 hover:text-purple-300 transition-colors"
-                                  title="Voir la vidéo"
+                                  title="View video"
                                 >
                                   <Eye className="w-4 h-4" />
                                 </a>

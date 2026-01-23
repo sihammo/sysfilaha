@@ -11,96 +11,93 @@ export function Services() {
   const services = [
     {
       icon: Video,
-      title: 'Montage Vidéo Pro',
-      description: 'Montage précis et dynamique pour donner vie à vos contenus',
-      features: ['Cuts & transitions', 'Synchronisation audio', 'Optimisation rythme', 'Export multi-formats']
+      title: 'Pro Video Editing',
+      description: 'Precise and dynamic editing to bring your content to life',
+      features: ['Cuts & transitions', 'Audio synchronization', 'Pace optimization', 'Multi-format export']
     },
     {
       icon: Wand2,
       title: 'Motion Design',
-      description: 'Animations graphiques percutantes pour vos vidéos explicatives',
-      features: ['Animations 2D/3D', 'Typographie animée', 'Infographies', 'Logo animation']
+      description: 'Impactful graphic animations for your explainer videos',
+      features: ['2D/3D Animations', 'Animated typography', 'Infographics', 'Logo animation']
     },
     {
       icon: Film,
-      title: 'Vidéos Explicatives',
-      description: 'Transformez vos idées complexes en vidéos claires et engageantes',
-      features: ['Storyboard', 'Script & voix-off', 'Illustrations', 'Call-to-action']
+      title: 'Explainer Videos',
+      description: 'Transform your complex ideas into clear and engaging videos',
+      features: ['Storyboarding', 'Script & voice-over', 'Illustrations', 'Call to action']
     },
     {
       icon: Palette,
       title: 'Color Grading',
-      description: 'Étalonnage professionnel pour une ambiance visuelle unique',
-      features: ['Correction couleur', 'LUTs personnalisées', 'Cohérence visuelle', 'Retouche image']
+      description: 'Professional color grading for a unique visual ambiance',
+      features: ['Color correction', 'Custom LUTs', 'Visual consistency', 'Image retouching']
     },
     {
       icon: FileText,
-      title: 'Storyboard',
-      description: 'Conception visuelle de votre projet avant production',
-      features: ['Scénarisation', 'Croquis scènes', 'Séquençage', 'Validation concept']
+      title: 'Storyboarding',
+      description: 'Visual design of your project before production',
+      features: ['Scriptwriting', 'Scene sketching', 'Sequencing', 'Concept validation']
     },
     {
       icon: Sparkles,
-      title: 'Mixage Audio',
-      description: 'Mixage et mastering pour un son professionnel',
-      features: ['Nettoyage audio', 'Equalisation', 'Musique & SFX', 'Voix-off mixée']
+      title: 'Audio Mixing',
+      description: 'Mixing and mastering for professional sound',
+      features: ['Audio cleanup', 'Equalization', 'Music & SFX', 'Mixed voice-over']
     }
   ];
 
   const packages = [
     {
       id: 1,
-      name: 'Vidéo Courte',
-      duration: '30-60 secondes',
+      name: 'Short-Form Video',
+      duration: '30-60 seconds',
       features: [
-        'Montage professionnel',
+        'Professional editing',
         'Motion design',
         'Color grading',
-        'Mixage audio',
-        'Révisions illimitées',
-        'Illustration personnalisée',
-        'Branding unique',
-        'Effets viraux/Motions'
+        'Audio mixing',
+        'Unlimited revisions',
+        'Custom illustration',
+        'Unique branding',
+        'Viral effects/Motions'
       ],
       popular: false,
-      premium: false,
-      price: 'Sur devis'
+      premium: false
     },
     {
       id: 2,
-      name: 'Vidéo Standard',
+      name: 'Standard Video',
       duration: '1-3 minutes',
       features: [
-        'Montage avancé',
-        'Motion design pro',
-        'Color grading premium',
-        'Mixage audio pro',
-        'Storyboard inclus',
-        'Révisions illimitées',
+        'Advanced editing',
+        'Pro motion design',
+        'Premium color grading',
+        'Pro audio mixing',
+        'Storyboard included',
+        'Unlimited revisions',
         'Style (Iman Gadzhi, Alex Hormozi)',
-        'Sous-titres inclus'
+        'Subtitles included'
       ],
       popular: true,
-      premium: false,
-      price: 'Sur devis'
+      premium: false
     },
     {
       id: 3,
-      name: 'Vidéo Premium',
-      duration: '5-10 minutes et plus',
+      name: 'Premium Video',
+      duration: '5-10 minutes and more',
       features: [
-        'Tout du package Standard',
-        'Animations 3D',
-        'Storytelling avancé',
-        'Sound Design & Mixage',
-        'Révisions illimitées',
-        'Branding personnalisé',
-        'Color grading pro',
-        'Style documentaire (optionnel)'
+        'Everything in Standard',
+        '3D Animations',
+        'Advanced storytelling',
+        'Sound Design & Mixing',
+        'Unlimited revisions',
+        'Custom branding',
+        'Pro color grading',
+        'Documentary style (optional)'
       ],
       popular: false,
-      premium: true,
-      price: 'Sur devis'
+      premium: true
     }
   ];
 
@@ -115,11 +112,11 @@ export function Services() {
 
   const getPackageMessage = (pkgName: string) => {
     const messages = {
-      'Vidéo Courte': `Bonjour ! Je suis intéressé(e) par le package "Vidéo Courte" (30-60 secondes). Pourriez-vous m'envoyer plus d'informations et un devis personnalisé ?`,
-      'Vidéo Standard': `Bonjour ! Je souhaite commander le package "Vidéo Standard" (1-3 minutes). Pourriez-vous me préparer un devis détaillé ?`,
-      'Vidéo Premium': `Bonjour ! Je suis intéressé(e) par le package "Vidéo Premium" (5-10 minutes et plus). J'aimerais discuter des options disponibles et obtenir un devis.`
+      'Short-Form Video': `Hello! I'm interested in the "Short-Form Video" package (30-60 seconds). Could you send me more information and a personalized quote?`,
+      'Standard Video': `Hello! I would like to order the "Standard Video" package (1-3 minutes). Could you prepare a detailed quote for me?`,
+      'Premium Video': `Hello! I'm interested in the "Premium Video" package (5-10 minutes and more). I'd like to discuss the available options and get a quote.`
     };
-    return encodeURIComponent(messages[pkgName as keyof typeof messages] || 'Bonjour ! Je suis intéressé(e) par vos services vidéo.');
+    return encodeURIComponent(messages[pkgName as keyof typeof messages] || 'Hello! I am interested in your video services.');
   };
 
   const contactOptions = [
@@ -133,7 +130,7 @@ export function Services() {
       icon: Mail,
       name: 'Email',
       color: 'bg-blue-500 hover:bg-blue-600',
-      href: (pkgName: string) => `mailto:redartmotion@gmail.com?subject=Demande de devis - ${pkgName}&body=${getPackageMessage(pkgName)}`
+      href: (pkgName: string) => `mailto:redartmotion@gmail.com?subject=Quote Request - ${pkgName}&body=${getPackageMessage(pkgName)}`
     },
     {
       icon: Instagram,
@@ -172,8 +169,8 @@ export function Services() {
                   <div className="p-6 border-b border-zinc-800">
                     <div className="flex justify-between items-center mb-4">
                       <div>
-                        <h3 className="text-white text-xl font-semibold">Commander ce package</h3>
-                        <p className="text-zinc-400 text-sm mt-1">Contactez-nous pour obtenir votre devis</p>
+                        <h3 className="text-white text-xl font-semibold">Order this package</h3>
+                        <p className="text-zinc-400 text-sm mt-1">Contact us to get your quote</p>
                       </div>
                       <button
                         onClick={() => setShowContactModal(false)}
@@ -190,9 +187,6 @@ export function Services() {
                           <h4 className="text-white font-medium">{selectedPackage.name}</h4>
                           <p className="text-zinc-400 text-sm">{selectedPackage.duration}</p>
                         </div>
-                        <div className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full text-white text-sm">
-                          Sur devis
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -200,7 +194,7 @@ export function Services() {
                   {/* Contact Options */}
                   <div className="p-6">
                     <p className="text-zinc-400 text-center mb-6">
-                      Choisissez votre mode de contact préféré
+                      Choose your preferred contact method
                     </p>
 
                     <div className="space-y-3">
@@ -228,8 +222,8 @@ export function Services() {
                             <span className="font-medium">{option.name}</span>
                             <p className="text-sm opacity-90">
                               {option.name === 'Instagram'
-                                ? 'Contactez-nous en message privé'
-                                : 'Message pré-rempli pour votre demande'}
+                                ? 'Contact us via direct message'
+                                : 'Pre-filled message for your request'}
                             </p>
                           </div>
                         </motion.a>
@@ -239,9 +233,9 @@ export function Services() {
                     {/* Alternative */}
                     <div className="mt-6 pt-6 border-t border-zinc-800">
                       <p className="text-center text-zinc-500 text-sm">
-                        Vous préférez d'abord discuter de votre projet ?<br />
+                        Prefer to discuss your project first?<br />
                         <a href="#contact" className="text-purple-400 hover:text-purple-300 transition-colors">
-                          Utilisez notre formulaire de contact
+                          Use our contact form
                         </a>
                       </p>
                     </div>
@@ -260,14 +254,14 @@ export function Services() {
           className="text-center mb-16"
         >
           <div className="inline-block px-4 py-2 bg-white/10 border border-white/20 rounded-full text-white mb-4">
-            Nos Services
+            Our Services
           </div>
           <h2 className="text-white mb-4">
-            Expertise complète en production vidéo
+            Complete Video Production Expertise
           </h2>
           <p className="text-zinc-400 text-xl max-w-2xl mx-auto">
-            De la conception à la livraison, nous prenons en charge tous les aspects
-            de votre projet vidéo
+            From concept to delivery, we handle all aspects
+            of your video project
           </p>
         </motion.div>
 
@@ -316,9 +310,9 @@ export function Services() {
 
         {/* Packages Section */}
         <div className="text-center mb-12">
-          <h3 className="text-white mb-4">Packages & Tarifs</h3>
+          <h3 className="text-white mb-4">Packages & Pricing</h3>
           <p className="text-zinc-400 max-w-2xl mx-auto">
-            Choisissez la formule adaptée à votre projet. Tarifs personnalisés selon vos besoins.
+            Choose the package that fits your project. Personalized rates according to your needs.
           </p>
         </div>
 
@@ -335,7 +329,7 @@ export function Services() {
               className={`group relative p-8 rounded-xl border transition-all duration-500 ${pkg.premium
                 ? 'bg-gradient-to-br from-yellow-900/20 via-amber-900/10 to-yellow-800/20 border-yellow-600/50 hover:border-yellow-500 shadow-lg shadow-yellow-900/20'
                 : pkg.popular
-                  ? 'bg-zinc-800/50 border-zinc-700 hover:border-white'
+                  ? 'bg-gradient-to-br from-purple-900/20 via-zinc-900 to-purple-800/20 border-purple-500/50 hover:border-purple-400 shadow-lg shadow-purple-900/20'
                   : 'bg-zinc-900 border-zinc-800 hover:border-white'
                 }`}
               style={{
@@ -364,26 +358,36 @@ export function Services() {
               {/* Popular Badge */}
               {pkg.popular && !pkg.premium && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm rounded-full transition-all duration-500">
-                  Plus populaire
+                  Most Popular
                 </div>
               )}
 
               <div className="text-center mb-6">
-                <h4 className={`mb-2 transition-colors duration-500 ${pkg.premium ? 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-400' : 'text-white'
+                <h4 className={`mb-2 transition-colors duration-500 ${pkg.premium
+                  ? 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-400'
+                  : pkg.popular
+                    ? 'text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400'
+                    : 'text-white'
                   }`}>{pkg.name}</h4>
-                <div className={`mb-4 transition-colors duration-500 ${pkg.premium ? 'text-yellow-300/80' : 'text-zinc-400'
+                <div className={`mb-4 transition-colors duration-500 ${pkg.premium
+                  ? 'text-yellow-300/80'
+                  : pkg.popular
+                    ? 'text-purple-300/80'
+                    : 'text-zinc-400'
                   }`}>{pkg.duration}</div>
-                <div className={`text-3xl bg-clip-text text-transparent transition-colors duration-500 ${pkg.premium
-                  ? 'bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-400'
-                  : 'bg-gradient-to-r from-purple-500 to-pink-500'
-                  }`}>{pkg.price}</div>
               </div>
 
               <ul className="space-y-3 mb-8">
                 {pkg.features.map((feature, i) => (
-                  <li key={i} className={`flex items-start gap-3 transition-colors duration-500 ${pkg.premium ? 'text-yellow-100/90' : 'text-zinc-400'
+                  <li key={i} className={`flex items-start gap-3 transition-colors duration-500 ${pkg.premium
+                    ? 'text-yellow-100/90'
+                    : pkg.popular
+                      ? 'text-white'
+                      : 'text-zinc-400'
                     }`}>
-                    <Check className={`w-5 h-5 flex-shrink-0 mt-0.5 transition-colors duration-500 ${pkg.premium ? 'text-yellow-500' : 'text-purple-500'
+                    <Check className={`w-5 h-5 flex-shrink-0 mt-0.5 transition-colors duration-500 ${pkg.premium
+                      ? 'text-yellow-500'
+                      : 'text-purple-500'
                       }`} />
                     <span>{feature}</span>
                   </li>
@@ -399,7 +403,7 @@ export function Services() {
                     : 'bg-zinc-800 text-zinc-300 hover:bg-gradient-to-r hover:from-purple-500 hover:to-pink-500 hover:text-white'
                   }`}
               >
-                {pkg.premium ? 'Consultation Premium' : 'Demander un devis'}
+                {pkg.premium ? 'Premium Consultation' : 'Request a Quote'}
               </button>
             </motion.div>
           ))}

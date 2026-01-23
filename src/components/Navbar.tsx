@@ -1,4 +1,4 @@
-  import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu, X, Play } from 'lucide-react';
 import logo from 'figma:asset/81b1bd4720a35c1b1ae962b568c1d6eb74b7618f.png';
 
@@ -16,23 +16,22 @@ export function Navbar() {
 
   const navLinks = [
     { href: '#services', label: 'Services' },
-    { href: '#processus', label: 'Processus' },
+    { href: '#processus', label: 'Process' },
     { href: '#portfolio', label: 'Portfolio' },
-    { href: '#about', label: 'Avis' },
+    { href: '#about', label: 'Reviews' },
     { href: '#faq', label: 'FAQ' },
   ];
 
   return (
-    <nav className={`fixed w-full z-50 transition-all duration-300 ${
-      scrolled ? 'bg-zinc-950/95 backdrop-blur-md shadow-lg' : 'bg-transparent'
-    }`}>
+    <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-zinc-950/95 backdrop-blur-md shadow-lg' : 'bg-transparent'
+      }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <a href="#" className="flex items-center gap-2 group">
-            <img 
-              src={logo} 
-              alt="RedArtMotion Logo" 
+            <img
+              src={logo}
+              alt="RedArtMotion Logo"
               className="w-10 h-10 object-contain transform group-hover:scale-110 transition-transform"
             />
             <span className="text-white text-xl tracking-tight">
@@ -56,7 +55,7 @@ export function Navbar() {
               href="#contact"
               className="px-6 py-2.5 bg-white text-black rounded-lg hover:bg-zinc-100 transition-colors"
             >
-              Réserver un appel
+              Book a Call
             </a>
           </div>
 
@@ -89,7 +88,7 @@ export function Navbar() {
               onClick={() => setIsOpen(false)}
               className="block px-6 py-2.5 bg-white text-black rounded-lg hover:bg-zinc-100 transition-colors text-center"
             >
-              Réserver un appel
+              Book a Call
             </a>
           </div>
         </div>

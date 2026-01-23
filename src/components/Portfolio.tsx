@@ -1,4 +1,4 @@
- import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Play, X, RefreshCw, Youtube, FileVideo, Globe } from 'lucide-react';
 
@@ -19,18 +19,18 @@ interface Project {
 }
 
 export function Portfolio() {
-  const [activeFilter, setActiveFilter] = useState('Tous');
+  const [activeFilter, setActiveFilter] = useState('All');
   const [selectedVideo, setSelectedVideo] = useState<Project | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [videoModalOpen, setVideoModalOpen] = useState(false);
 
-  const API_URL = 'https://script.google.com/macros/s/AKfycbznAIw4RryxWGoSeKqO6x-xRZhKZqyMCUb_3vO8OnN6u83GU6JQI9QkbI5NsAMBqUc2tQ/exec';
+  const API_URL = 'https://script.google.com/macros/s/AKfycbzPW0PvdToWVJ2qw3TSHBDPTJB_gv16eUUEytpCi_rqJJAeySK1KZDYWWU3UIrcELNI/exec';
 
   // Function to get video platform icon
   const getPlatformIcon = (type: string) => {
-    switch(type.toLowerCase()) {
+    switch (type.toLowerCase()) {
       case 'youtube':
         return <Youtube className="w-4 h-4" />;
       case 'drive':
@@ -49,7 +49,7 @@ export function Portfolio() {
     let type = video.type || 'YouTube';
 
     // Process based on video type
-    switch(type.toLowerCase()) {
+    switch (type.toLowerCase()) {
       case 'youtube':
         const ytId = extractYouTubeId(videoId);
         videoId = ytId;
@@ -97,10 +97,10 @@ export function Portfolio() {
 
     return {
       id: video.id,
-      title: video.title || 'Sans titre',
+      title: video.title || 'Untitled',
       description: video.description || '',
       videoId: videoId,
-      category: video.category || 'Montage Vidéo',
+      category: video.category || 'Video Editing',
       client: video.client || '',
       duration: video.duration || '',
       type: type,
@@ -115,62 +115,62 @@ export function Portfolio() {
   // Extract YouTube ID
   const extractYouTubeId = (url: string): string => {
     if (!url) return '';
-    
+
     // If it's already just an ID
     if (url.length === 11 && !url.includes('/')) {
       return url;
     }
-    
+
     const patterns = [
       /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
       /^([a-zA-Z0-9_-]{11})$/
     ];
-    
+
     for (const pattern of patterns) {
       const match = url.match(pattern);
       if (match) return match[1];
     }
-    
+
     return '';
   };
 
   // Extract Google Drive ID
   const extractGoogleDriveId = (url: string): string => {
     if (!url) return '';
-    
+
     // Direct file ID
     if (url.length >= 20 && !url.includes('/')) {
       return url;
     }
-    
+
     // Extract from Google Drive URL
     const patterns = [
       /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,
       /drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/,
       /^([a-zA-Z0-9_-]{20,})$/
     ];
-    
+
     for (const pattern of patterns) {
       const match = url.match(pattern);
       if (match) return match[1];
     }
-    
+
     return '';
   };
 
   // Extract Vimeo ID
   const extractVimeoId = (url: string): string => {
     if (!url) return '';
-    
+
     // Direct ID
     if (/^\d+$/.test(url)) {
       return url;
     }
-    
+
     // Extract from Vimeo URL
     const pattern = /vimeo\.com\/(\d+)/;
     const match = url.match(pattern);
-    
+
     return match ? match[1] : '';
   };
 
@@ -181,26 +181,26 @@ export function Portfolio() {
     try {
       const response = await fetch(`${API_URL}?action=getVideos`);
       const data = await response.json();
-      
+
       if (data.success && data.videos) {
         // Process each video to generate proper URLs and thumbnails
-        const transformedProjects = data.videos.map((video: any) => 
+        const transformedProjects = data.videos.map((video: any) =>
           processVideoData(video)
         );
-        
+
         setProjects(transformedProjects);
-        
+
         // Save to localStorage as backup
         localStorage.setItem('portfolioVideos', JSON.stringify(transformedProjects));
-        
+
         // Generate dynamic filters from categories
         updateFilters(transformedProjects);
       } else {
-        throw new Error(data.message || 'Erreur API');
+        throw new Error(data.message || 'API Error');
       }
     } catch (error) {
       console.error('Error fetching projects:', error);
-      setError('Erreur de chargement des vidéos');
+      setError('Error loading videos');
       loadFromLocalStorage();
     } finally {
       setLoading(false);
@@ -211,10 +211,10 @@ export function Portfolio() {
   const updateFilters = (projectsList: Project[]) => {
     const categories = Array.from(new Set(projectsList.map(p => p.category)))
       .filter(Boolean) as string[];
-    
+
     // Update filters state if needed
-    if (categories.length > 0 && !categories.includes(activeFilter) && activeFilter !== 'Tous') {
-      setActiveFilter('Tous');
+    if (categories.length > 0 && !categories.includes(activeFilter) && activeFilter !== 'All') {
+      setActiveFilter('All');
     }
   };
 
@@ -239,11 +239,11 @@ export function Portfolio() {
     return [
       {
         id: '1',
-        title: 'Vidéo Explicative SaaS',
-        description: 'Une vidéo explicative pour une startup SaaS',
+        title: 'SaaS Explainer Video',
+        description: 'An explainer video for a SaaS startup',
         videoId: 'dQw4w9WgXcQ',
-        category: 'Montage Vidéo',
-        client: 'Startup Tech',
+        category: 'Video Editing',
+        client: 'Tech Startup',
         duration: '2:30',
         type: 'YouTube',
         videoLength: '150',
@@ -255,10 +255,10 @@ export function Portfolio() {
       {
         id: '2',
         title: 'Motion Design Logo',
-        description: 'Animation de logo en motion design',
+        description: 'Logo animation in motion design',
         videoId: 'example2',
         category: 'Motion Design',
-        client: 'Agence Creative',
+        client: 'Creative Agency',
         duration: '0:45',
         type: 'YouTube',
         videoLength: '45',
@@ -269,10 +269,10 @@ export function Portfolio() {
       },
       {
         id: '3',
-        title: 'Publicité Tech Startup',
-        description: 'Publicité pour une startup technologique',
+        title: 'Tech Startup Ad',
+        description: 'Advertisement for a tech startup',
         videoId: 'example3',
-        category: 'Vidéos Explicatives',
+        category: 'Explainer Videos',
         client: 'Tech Corp',
         duration: '1:15',
         type: 'YouTube',
@@ -289,12 +289,12 @@ export function Portfolio() {
   const getFilters = () => {
     const categories = Array.from(new Set(projects.map(p => p.category)))
       .filter(Boolean) as string[];
-    return ['Tous', ...categories];
+    return ['All', ...categories];
   };
 
   // Filter projects
-  const filteredProjects = activeFilter === 'Tous' 
-    ? projects 
+  const filteredProjects = activeFilter === 'All'
+    ? projects
     : projects.filter(p => p.category === activeFilter);
 
   // Handle video click
@@ -310,7 +310,7 @@ export function Portfolio() {
   };
 
   // Initial load
-  useEffect(() => { 
+  useEffect(() => {
     fetchProjects();
 
     // Listen for portfolio refresh from admin panel
@@ -319,7 +319,7 @@ export function Portfolio() {
     };
 
     window.addEventListener('portfolioRefresh', handlePortfolioRefresh);
-    
+
     return () => {
       window.removeEventListener('portfolioRefresh', handlePortfolioRefresh);
     };
@@ -339,31 +339,31 @@ export function Portfolio() {
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 rounded-full text-white mb-4">
             <RefreshCw className="w-4 h-4" />
-            Portfolio Dynamique
+            Dynamic Portfolio
           </div>
           <h2 className="text-white mb-4">
-            Nos réalisations
+            Our Work
           </h2>
           <p className="text-zinc-400 text-xl max-w-2xl mx-auto">
-            Découvrez nos projets récents - YouTube, Drive, Vimeo, TikTok et plus
+            Discover our recent projects - YouTube, Drive, Vimeo, TikTok, and more
           </p>
-          
+
           {/* Loading/Error State */}
           <div className="mt-4">
             {loading && (
               <div className="inline-flex items-center gap-2 text-zinc-400">
                 <RefreshCw className="w-4 h-4 animate-spin" />
-                Chargement des vidéos...
+                Loading videos...
               </div>
             )}
             {error && !loading && (
               <div className="inline-flex items-center gap-2 text-red-400">
                 <span>{error}</span>
-                <button 
+                <button
                   onClick={fetchProjects}
                   className="text-white underline hover:no-underline"
                 >
-                  Réessayer
+                  Retry
                 </button>
               </div>
             )}
@@ -376,11 +376,10 @@ export function Portfolio() {
             <button
               key={filter}
               onClick={() => setActiveFilter(filter)}
-              className={`px-6 py-2 rounded-lg transition-all duration-200 ${
-                activeFilter === filter
+              className={`px-6 py-2 rounded-lg transition-all duration-200 ${activeFilter === filter
                   ? 'bg-white text-black font-medium'
                   : 'bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800 hover:text-white'
-              }`}
+                }`}
             >
               {filter}
             </button>
@@ -396,14 +395,14 @@ export function Portfolio() {
               className="text-center py-12"
             >
               <p className="text-zinc-400 text-lg">
-                Aucune vidéo dans la catégorie "{activeFilter}"
+                No videos in the "{activeFilter}" category
               </p>
-              {activeFilter !== 'Tous' && (
+              {activeFilter !== 'All' && (
                 <button
-                  onClick={() => setActiveFilter('Tous')}
+                  onClick={() => setActiveFilter('All')}
                   className="mt-4 text-white underline hover:no-underline"
                 >
-                  Voir toutes les vidéos
+                  View all videos
                 </button>
               )}
             </motion.div>
@@ -435,20 +434,20 @@ export function Portfolio() {
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/50 to-transparent" />
-                    
+
                     {/* Platform Badge */}
                     <div className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 bg-black/70 backdrop-blur-sm rounded text-xs text-white">
                       {getPlatformIcon(project.type)}
                       <span className="capitalize">{project.type}</span>
                     </div>
-                    
+
                     {/* Duration Badge */}
                     {project.duration && (
                       <div className="absolute top-3 right-3 px-2 py-1 bg-black/70 backdrop-blur-sm rounded text-xs text-white">
                         {project.duration}
                       </div>
                     )}
-                    
+
                     {/* Play Button Overlay */}
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-2xl shadow-white/50 transform group-hover:scale-110 transition-transform">
@@ -464,7 +463,7 @@ export function Portfolio() {
                         {project.title}
                       </h3>
                     </div>
-                    
+
                     {/* Client and Stats */}
                     <div className="flex items-center justify-between mb-3">
                       {project.client && (
@@ -472,18 +471,18 @@ export function Portfolio() {
                           {project.client}
                         </span>
                       )}
-                      
+
                       {/* Stats */}
                       <div className="flex items-center gap-3 text-zinc-500 text-sm">
                         {project.views > 0 && (
-                          <span>{project.views.toLocaleString()} vues</span>
+                          <span>{project.views.toLocaleString()} views</span>
                         )}
                         {project.engagement > 0 && (
-                          <span>{project.engagement}%</span>
+                          <span>{project.engagement}% engagement</span>
                         )}
                       </div>
                     </div>
-                    
+
                     {/* Description */}
                     {project.description && (
                       <p className="text-zinc-400 text-sm mb-4 line-clamp-2">
@@ -496,14 +495,14 @@ export function Portfolio() {
                       <span className="inline-flex items-center gap-1 px-3 py-1 bg-zinc-800/50 rounded-full text-zinc-300 text-sm">
                         {project.category}
                       </span>
-                      
+
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleVideoClick(project)}
                           className="flex items-center gap-2 px-4 py-2 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700 transition-colors text-sm"
                         >
                           <Play className="w-4 h-4" />
-                          Regarder
+                          Watch
                         </button>
                         <a
                           href={project.videoUrl}
@@ -578,7 +577,7 @@ export function Portfolio() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-zinc-400">
-                        <p>Visionnez la vidéo sur la plateforme originale</p>
+                        <p>Watch the video on the original platform</p>
                       </div>
                     )}
                   </div>
@@ -591,18 +590,18 @@ export function Portfolio() {
                         <p className="text-zinc-400">{selectedVideo.description}</p>
                       </div>
                     )}
-                    
+
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div className="bg-zinc-800/50 p-4 rounded-lg">
                         <p className="text-zinc-400 text-sm">Type</p>
                         <p className="text-white">{selectedVideo.type}</p>
                       </div>
                       <div className="bg-zinc-800/50 p-4 rounded-lg">
-                        <p className="text-zinc-400 text-sm">Durée</p>
+                        <p className="text-zinc-400 text-sm">Duration</p>
                         <p className="text-white">{selectedVideo.duration || 'N/A'}</p>
                       </div>
                       <div className="bg-zinc-800/50 p-4 rounded-lg">
-                        <p className="text-zinc-400 text-sm">Vues</p>
+                        <p className="text-zinc-400 text-sm">Views</p>
                         <p className="text-white">{selectedVideo.views.toLocaleString()}</p>
                       </div>
                       <div className="bg-zinc-800/50 p-4 rounded-lg">
@@ -623,13 +622,13 @@ export function Portfolio() {
                       className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
                     >
                       {getPlatformIcon(selectedVideo.type)}
-                      Ouvrir sur {selectedVideo.type}
+                      Open on {selectedVideo.type}
                     </a>
                     <button
                       onClick={closeVideoModal}
                       className="px-6 py-3 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700 transition-colors"
                     >
-                      Fermer
+                      Close
                     </button>
                   </div>
                 </div>
@@ -646,10 +645,10 @@ export function Portfolio() {
             className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700 transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            {loading ? 'Actualisation...' : 'Actualiser les vidéos'}
+            {loading ? 'Refreshing...' : 'Refresh Videos'}
           </button>
           <p className="text-zinc-500 text-sm mt-2">
-            {projects.length} vidéos disponibles • Support: YouTube, Drive, Vimeo, TikTok, Instagram
+            {projects.length} videos available • Supports: YouTube, Drive, Vimeo, TikTok, Instagram
           </p>
         </div>
       </div>
