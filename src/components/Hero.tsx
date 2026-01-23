@@ -41,11 +41,12 @@ export function Hero() {
               href="#contact"
               className="group px-6 sm:px-8 py-3 sm:py-4 bg-white text-black rounded-lg hover:bg-zinc-100 transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-white/20 hover:shadow-white/40 text-sm sm:text-base"
             >
-              HIRE ME              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
+              HIRE ME
+              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
             </a>
 
             <a
-              href="#Portfolio"
+              href="#portfolio"
               className="group px-6 sm:px-8 py-3 sm:py-4 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700 transition-all duration-300 flex items-center justify-center gap-2 border border-zinc-700 text-sm sm:text-base"
             >
               <Play className="w-4 h-4 sm:w-5 sm:h-5" />
