@@ -1,9 +1,8 @@
 
   # Website for RedArtMotion
 
-  This is a code bundle for Website for RedArtMotion. The original project is available at https://www.figma.com/design/uDgMdF37czcKH9ohyW8PFj/Website-for-RedArtMotion.
-
-  ## Running the code
+  This is a code bundle for Website for RedArtMotion. T made by mehdy mokkedes  
+  
 
   Run `npm i` to install the dependencies.
 
