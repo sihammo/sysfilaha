@@ -1,7 +1,8 @@
 
   # Website for RedArtMotion
 
-  This is a code bundle for Website for RedArtMotion. T made by mehdy mokkedes  
+  This is a code bundle for Website for RedArtMotion. T made by mehde mokkedes   and dendane zeyd 
+  
   
 
   Run `npm i` to install the dependencies.
