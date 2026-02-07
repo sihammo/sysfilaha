@@ -8,7 +8,27 @@ const connectDB = require('./config/db');
 const app = express();
 
 // Connect to Database
-connectDB();
+connectDB().then(async () => {
+    // Seed admin if not exists
+    const User = require('./models/User');
+    const bcrypt = require('bcryptjs');
+    const adminExists = await User.findOne({ role: 'admin' });
+    if (!adminExists) {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash('admin', salt);
+        const admin = new User({
+            firstName: 'المسؤول',
+            lastName: 'العام',
+            nationalId: 'admin',
+            password: hashedPassword,
+            role: 'admin',
+            approved: true,
+            status: 'approved'
+        });
+        await admin.save();
+        console.log('Default Admin created: admin/admin');
+    }
+});
 
 // Middleware
 app.use(express.json());
