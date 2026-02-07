@@ -7,9 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Plus, Edit, Trash2, Calendar, TrendingUp, DollarSign } from "lucide-react";
 import { toast } from "sonner";
+import api from "../utils/api";
 
 interface Sale {
-  id: string;
+  _id: string;
   cropName: string;
   quantity: number;
   pricePerUnit: number;
@@ -27,6 +28,7 @@ export default function SalesManagement({ userId }: SalesManagementProps) {
   const [sales, setSales] = useState<Sale[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSale, setEditingSale] = useState<Sale | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
     cropName: "",
     quantity: "",
@@ -37,56 +39,46 @@ export default function SalesManagement({ userId }: SalesManagementProps) {
   });
 
   useEffect(() => {
-    const savedSales = localStorage.getItem(`sales_${userId}`);
-    if (savedSales) {
-      setSales(JSON.parse(savedSales));
-    }
+    loadSales();
   }, [userId]);
 
-  const saveSales = (newSales: Sale[]) => {
-    setSales(newSales);
-    localStorage.setItem(`sales_${userId}`, JSON.stringify(newSales));
+  const loadSales = async () => {
+    try {
+      setIsLoading(true);
+      const data = await api.farmer.getSales();
+      setSales(data);
+    } catch (e) {
+      toast.error("فشل تحميل المبيعات");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const totalPrice = Number(formData.quantity) * Number(formData.pricePerUnit);
 
-    if (editingSale) {
-      const updatedSales = sales.map((sale) =>
-        sale.id === editingSale.id
-          ? {
-              ...editingSale,
-              cropName: formData.cropName,
-              quantity: Number(formData.quantity),
-              pricePerUnit: Number(formData.pricePerUnit),
-              totalPrice,
-              buyerName: formData.buyerName,
-              saleDate: formData.saleDate,
-              paymentStatus: formData.paymentStatus,
-            }
-          : sale
-      );
-      saveSales(updatedSales);
-      toast.success("تم تحديث عملية البيع بنجاح");
-    } else {
-      const newSale: Sale = {
-        id: Date.now().toString(),
-        cropName: formData.cropName,
+    try {
+      const totalPrice = Number(formData.quantity) * Number(formData.pricePerUnit);
+      const payload = {
+        ...formData,
         quantity: Number(formData.quantity),
         pricePerUnit: Number(formData.pricePerUnit),
-        totalPrice,
-        buyerName: formData.buyerName,
-        saleDate: formData.saleDate,
-        paymentStatus: formData.paymentStatus,
+        totalPrice
       };
-      saveSales([...sales, newSale]);
-      toast.success("تم إضافة عملية البيع بنجاح");
-    }
 
-    setIsDialogOpen(false);
-    resetForm();
+      if (editingSale) {
+        await api.farmer.updateSale(editingSale._id, payload);
+        toast.success("تم تحديث عملية البيع بنجاح");
+      } else {
+        await api.farmer.addSale(payload);
+        toast.success("تم إضافة عملية البيع بنجاح");
+      }
+      loadSales();
+      setIsDialogOpen(false);
+      resetForm();
+    } catch (error: any) {
+      toast.error(error.message || "فشل العملية");
+    }
   };
 
   const resetForm = () => {
@@ -108,33 +100,36 @@ export default function SalesManagement({ userId }: SalesManagementProps) {
       quantity: sale.quantity.toString(),
       pricePerUnit: sale.pricePerUnit.toString(),
       buyerName: sale.buyerName,
-      saleDate: sale.saleDate,
+      saleDate: sale.saleDate ? sale.saleDate.split('T')[0] : "",
       paymentStatus: sale.paymentStatus,
     });
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    saveSales(sales.filter((sale) => sale.id !== id));
-    toast.success("تم حذف عملية البيع بنجاح");
+  const handleDelete = async (id: string) => {
+    if (confirm("هل أنت متأكد من حذف هذه العملية؟")) {
+      try {
+        await api.farmer.deleteSale(id);
+        toast.success("تم الحذف بنجاح");
+        loadSales();
+      } catch (error: any) {
+        toast.error("فشل الحذف");
+      }
+    }
   };
 
   const getPaymentStatusColor = (status: string) => {
     switch (status) {
-      case "مدفوع":
-        return "bg-green-100 text-green-800";
-      case "معلق":
-        return "bg-yellow-100 text-yellow-800";
-      case "متأخر":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+      case "مدفوع": return "bg-green-100 text-green-800";
+      case "معلق": return "bg-yellow-100 text-yellow-800";
+      case "متأخر": return "bg-red-100 text-red-800";
+      default: return "bg-gray-100 text-gray-800";
     }
   };
 
-  const totalRevenue = sales.reduce((sum, sale) => sum + sale.totalPrice, 0);
-  const paidRevenue = sales.filter(s => s.paymentStatus === "مدفوع").reduce((sum, sale) => sum + sale.totalPrice, 0);
-  const pendingRevenue = sales.filter(s => s.paymentStatus !== "مدفوع").reduce((sum, sale) => sum + sale.totalPrice, 0);
+  const totalRevenue = sales.reduce((sum, s) => sum + (s.totalPrice || 0), 0);
+
+  if (isLoading) return <div className="p-8 text-center text-gray-500">جاري التحميل...</div>;
 
   return (
     <div className="space-y-6">
@@ -151,202 +146,43 @@ export default function SalesManagement({ userId }: SalesManagementProps) {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md" dir="rtl">
-            <DialogHeader>
-              <DialogTitle>{editingSale ? "تعديل عملية البيع" : "إضافة عملية بيع جديدة"}</DialogTitle>
-            </DialogHeader>
+            <DialogHeader><DialogTitle>{editingSale ? "تعديل عملية البيع" : "إضافة عملية بيع جديدة"}</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="cropName">اسم المحصول</Label>
-                <Input
-                  id="cropName"
-                  value={formData.cropName}
-                  onChange={(e) => setFormData({ ...formData, cropName: e.target.value })}
-                  required
-                  placeholder="مثال: قمح"
-                />
+              <div><Label htmlFor="cropName">اسم المحصول</Label><Input id="cropName" value={formData.cropName} onChange={(e) => setFormData({ ...formData, cropName: e.target.value })} required /></div>
+              <div className="grid grid-cols-2 gap-2">
+                <div><Label htmlFor="quantity">الكمية</Label><Input id="quantity" type="number" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} required /></div>
+                <div><Label htmlFor="pricePerUnit">السعر للقنطار</Label><Input id="pricePerUnit" type="number" value={formData.pricePerUnit} onChange={(e) => setFormData({ ...formData, pricePerUnit: e.target.value })} required /></div>
               </div>
-
-              <div>
-                <Label htmlFor="quantity">الكمية (قنطار)</Label>
-                <Input
-                  id="quantity"
-                  type="number"
-                  step="0.1"
-                  value={formData.quantity}
-                  onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                  required
-                  placeholder="مثال: 50"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="pricePerUnit">السعر للقنطار (دج)</Label>
-                <Input
-                  id="pricePerUnit"
-                  type="number"
-                  step="0.01"
-                  value={formData.pricePerUnit}
-                  onChange={(e) => setFormData({ ...formData, pricePerUnit: e.target.value })}
-                  required
-                  placeholder="مثال: 5000"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="buyerName">اسم المشتري</Label>
-                <Input
-                  id="buyerName"
-                  value={formData.buyerName}
-                  onChange={(e) => setFormData({ ...formData, buyerName: e.target.value })}
-                  required
-                  placeholder="مثال: أحمد بن علي"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="saleDate">تاريخ البيع</Label>
-                <Input
-                  id="saleDate"
-                  type="date"
-                  value={formData.saleDate}
-                  onChange={(e) => setFormData({ ...formData, saleDate: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="paymentStatus">حالة الدفع</Label>
-                <Select value={formData.paymentStatus} onValueChange={(value) => setFormData({ ...formData, paymentStatus: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="مدفوع">مدفوع</SelectItem>
-                    <SelectItem value="معلق">معلق</SelectItem>
-                    <SelectItem value="متأخر">متأخر</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {formData.quantity && formData.pricePerUnit && (
-                <div className="p-3 bg-green-50 rounded-lg">
-                  <p className="text-sm text-gray-600">المبلغ الإجمالي</p>
-                  <p className="text-2xl text-green-700">
-                    {(Number(formData.quantity) * Number(formData.pricePerUnit)).toLocaleString()} دج
-                  </p>
-                </div>
-              )}
-
-              <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
-                {editingSale ? "تحديث" : "إضافة"}
-              </Button>
+              <div><Label htmlFor="buyerName">المشتري</Label><Input id="buyerName" value={formData.buyerName} onChange={(e) => setFormData({ ...formData, buyerName: e.target.value })} required /></div>
+              <div><Label htmlFor="saleDate">التاريخ</Label><Input id="saleDate" type="date" value={formData.saleDate} onChange={(e) => setFormData({ ...formData, saleDate: e.target.value })} required /></div>
+              <Button type="submit" className="w-full bg-green-600">{editingSale ? "تحديث" : "إضافة"}</Button>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-green-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm text-gray-600">إجمالي الإيرادات</CardTitle>
-            <DollarSign className="w-5 h-5 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl text-green-700">{totalRevenue.toLocaleString()} دج</div>
-            <p className="text-xs text-gray-500 mt-1">{sales.length} عملية بيع</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-blue-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm text-gray-600">المدفوعات المستلمة</CardTitle>
-            <TrendingUp className="w-5 h-5 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl text-blue-700">{paidRevenue.toLocaleString()} دج</div>
-            <p className="text-xs text-gray-500 mt-1">تم الدفع</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-yellow-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm text-gray-600">المدفوعات المعلقة</CardTitle>
-            <Calendar className="w-5 h-5 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl text-yellow-700">{pendingRevenue.toLocaleString()} دج</div>
-            <p className="text-xs text-gray-500 mt-1">قيد الانتظار</p>
-          </CardContent>
-        </Card>
+        <Card className="border-green-200"><CardHeader className="pb-2 text-sm text-gray-600">إجمالي المبيعات</CardHeader><CardContent><div className="text-2xl text-green-700">{totalRevenue.toLocaleString()} دج</div></CardContent></Card>
       </div>
 
-      {/* Sales List */}
       <div className="space-y-3">
-        {sales.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <TrendingUp className="w-16 h-16 text-gray-300 mb-4" />
-              <p className="text-gray-500">لا توجد عمليات بيع مسجلة</p>
-              <p className="text-sm text-gray-400">ابدأ بإضافة عملية البيع الأولى</p>
+        {sales.map((sale) => (
+          <Card key={sale._id} className="hover:shadow-md transition-shadow">
+            <CardContent className="p-4 flex justify-between items-center">
+              <div>
+                <p className="font-bold">{sale.cropName} - {sale.buyerName}</p>
+                <p className="text-sm text-gray-500">{sale.quantity} قنطار × {sale.pricePerUnit.toLocaleString()} دج</p>
+                <p className="text-xs text-gray-400">{new Date(sale.saleDate).toLocaleDateString("ar-DZ")}</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className={`px-2 py-1 rounded text-xs ${getPaymentStatusColor(sale.paymentStatus)}`}>{sale.paymentStatus}</span>
+                <p className="text-lg font-bold text-green-700">{(sale.totalPrice || 0).toLocaleString()} دج</p>
+                <Button onClick={() => handleEdit(sale)} variant="ghost" size="sm"><Edit className="w-4 h-4" /></Button>
+                <Button onClick={() => handleDelete(sale._id)} variant="ghost" size="sm" className="text-red-600"><Trash2 className="w-4 h-4" /></Button>
+              </div>
             </CardContent>
           </Card>
-        ) : (
-          sales.map((sale) => (
-            <Card key={sale.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">المحصول</p>
-                      <p>{sale.cropName}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">الكمية</p>
-                      <p>{sale.quantity} قنطار</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">السعر</p>
-                      <p>{sale.pricePerUnit.toLocaleString()} دج</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">المشتري</p>
-                      <p>{sale.buyerName}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">التاريخ</p>
-                      <p>{new Date(sale.saleDate).toLocaleDateString("ar-DZ")}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col items-end gap-2">
-                    <span className={`px-3 py-1 rounded-full text-xs ${getPaymentStatusColor(sale.paymentStatus)}`}>
-                      {sale.paymentStatus}
-                    </span>
-                    <p className="text-lg text-green-700">{sale.totalPrice.toLocaleString()} دج</p>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => handleEdit(sale)}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        onClick={() => handleDelete(sale.id)}
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
+        ))}
       </div>
     </div>
   );

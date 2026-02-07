@@ -19,6 +19,7 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
     firstName: "",
     lastName: "",
     nationalId: "",
+    password: "",
     phone: "",
     email: "",
     address: "",
@@ -28,36 +29,6 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
 
   const [selectedRegion, setSelectedRegion] = useState("");
 
-  const algeriRegions = [
-    "الجزائر (عاصمة)",
-    "قسنطينة",
-    "وهران",
-    "تلمسان",
-    "تيارت",
-    "سعيدة",
-    "غليزان",
-    "عنابة",
-    "سكيكدة",
-    "جيجل",
-    "بني إسماعيل",
-    "تيزي وزو",
-    "باتنة",
-    "بسكرة",
-    "الأغواط",
-    "ورقلة",
-    "تمنراست",
-    "إليزي",
-    "الوادي",
-    "الجلفة",
-    "لاغوات",
-    "جانت",
-    "دالي الأحمر",
-    "سطيف",
-    "باتنة",
-    "بومرداس",
-    "تيبازة",
-  ];
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -65,7 +36,7 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
 
   const handleStep1Submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.firstName || !formData.lastName || !formData.nationalId || !formData.phone) {
+    if (!formData.firstName || !formData.lastName || !formData.nationalId || !formData.phone || !formData.password) {
       toast.error("الرجاء ملء جميع الحقول المطلوبة");
       return;
     }
@@ -93,18 +64,13 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
     }
 
     const newFarmer = {
-      id: `farmer-${Date.now()}`,
       ...formData,
       region: selectedRegion,
-      password: Math.random().toString(36).substring(7),
       role: "farmer",
-      approved: false,
       status: "pending",
-      registrationDate: new Date().toISOString(),
     };
 
     onRegister(newFarmer);
-    toast.success("تم إرسال طلب التسجيل! سيتم مراجعته من قبل الإدارة");
   };
 
   return (
@@ -123,7 +89,6 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
         </CardHeader>
 
         <CardContent className="space-y-6 pt-8">
-          {/* Step 1: Personal Information */}
           {step === 1 && (
             <form onSubmit={handleStep1Submit} className="space-y-6">
               <h3 className="text-lg font-semibold text-green-800">المعلومات الشخصية</h3>
@@ -138,7 +103,6 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
                     onChange={handleInputChange}
                     placeholder="محمد"
                     required
-                    className="text-lg"
                   />
                 </div>
                 <div>
@@ -150,7 +114,6 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
                     onChange={handleInputChange}
                     placeholder="بن علي"
                     required
-                    className="text-lg"
                   />
                 </div>
               </div>
@@ -164,7 +127,19 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
                   onChange={handleInputChange}
                   placeholder="1234567890123"
                   required
-                  className="text-lg"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="password">كلمة المرور</Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  placeholder="********"
+                  required
                 />
               </div>
 
@@ -176,9 +151,8 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    placeholder="+213-XXX-XXX-XXX"
+                    placeholder="05XXXXXXXX"
                     required
-                    className="text-lg"
                   />
                 </div>
                 <div>
@@ -190,7 +164,6 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="example@email.com"
-                    className="text-lg"
                   />
                 </div>
               </div>
@@ -209,7 +182,6 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
             </form>
           )}
 
-          {/* Step 2: Location and Land */}
           {step === 2 && (
             <form onSubmit={handleStep2Submit} className="space-y-6">
               <h3 className="text-lg font-semibold text-green-800 flex items-center gap-2">
@@ -217,7 +189,6 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
                 موقع الأرض الزراعية
               </h3>
 
-              {/* Interactive Algeria Map */}
               <div>
                 <AlgeriaMap
                   selectedRegion={selectedRegion}
@@ -234,7 +205,6 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
                   onChange={handleInputChange}
                   placeholder="اسم المدينة أو البلدية"
                   required
-                  className="text-lg"
                 />
               </div>
 
@@ -248,13 +218,7 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
                   onChange={handleInputChange}
                   placeholder="مثال: 5"
                   required
-                  className="text-lg"
                 />
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-700">
-                <p>📍 تحديد موقع أرضك:</p>
-                <p className="mt-2">سيتم استخدام بيانات موقعك لدعم الإدارة في عمليات التفتيش والإشراف والحماية من الممارسات الضارة.</p>
               </div>
 
               <div className="flex gap-4">
@@ -276,7 +240,6 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
             </form>
           )}
 
-          {/* Step 3: Agricultural Information */}
           {step === 3 && (
             <form onSubmit={handleFinalSubmit} className="space-y-6">
               <h3 className="text-lg font-semibold text-green-800">المعلومات الزراعية</h3>
@@ -290,7 +253,6 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
                   onChange={handleInputChange}
                   placeholder="اكتب المحاصيل التي تزرعها (مثال: قمح، شعير، تمر، إلخ)"
                   required
-                  className="text-lg"
                   rows={4}
                 />
               </div>

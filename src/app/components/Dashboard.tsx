@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Sprout, TrendingUp, Tractor, Coins } from "lucide-react";
 import FarmerLocationView from "./FarmerLocationView";
+import api from "../utils/api";
+import { toast } from "sonner";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 
 interface DashboardProps {
@@ -11,30 +13,30 @@ interface DashboardProps {
   userAddress?: string;
 }
 
-export default function Dashboard({ userId }: DashboardProps) {
+export default function Dashboard({ userId, userRegion, userLandArea, userAddress }: DashboardProps) {
   const [stats, setStats] = useState({
     totalCrops: 0,
     totalSales: 0,
     totalResources: 0,
     monthlyRevenue: 0,
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load data from localStorage
-    const crops = JSON.parse(localStorage.getItem(`crops_${userId}`) || "[]");
-    const sales = JSON.parse(localStorage.getItem(`sales_${userId}`) || "[]");
-    const lands = JSON.parse(localStorage.getItem(`lands_${userId}`) || "[]");
-    const equipment = JSON.parse(localStorage.getItem(`equipment_${userId}`) || "[]");
-
-    const totalSalesAmount = sales.reduce((sum: number, sale: any) => sum + (sale.totalPrice || 0), 0);
-
-    setStats({
-      totalCrops: crops.length,
-      totalSales: sales.length,
-      totalResources: lands.length + equipment.length,
-      monthlyRevenue: totalSalesAmount,
-    });
+    loadStats();
   }, [userId]);
+
+  const loadStats = async () => {
+    try {
+      setIsLoading(true);
+      const data = await api.farmer.getStats();
+      setStats(data);
+    } catch (error: any) {
+      toast.error("فشل في تحميل الإحصائيات");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const cropData = [
     { name: "قمح", value: 35 },
@@ -53,6 +55,10 @@ export default function Dashboard({ userId }: DashboardProps) {
   ];
 
   const COLORS = ["#16a34a", "#84cc16", "#eab308", "#f97316"];
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-gray-500">جاري التحميل...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -108,7 +114,6 @@ export default function Dashboard({ userId }: DashboardProps) {
         </Card>
       </div>
 
-      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -155,39 +160,6 @@ export default function Dashboard({ userId }: DashboardProps) {
         </Card>
       </div>
 
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>النشاط الأخير</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4 p-3 bg-green-50 rounded-lg">
-              <Sprout className="w-8 h-8 text-green-600" />
-              <div>
-                <p className="text-sm">تم إضافة محصول جديد</p>
-                <p className="text-xs text-gray-500">منذ ساعتين</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 p-3 bg-blue-50 rounded-lg">
-              <TrendingUp className="w-8 h-8 text-blue-600" />
-              <div>
-                <p className="text-sm">تم تسجيل عملية بيع جديدة</p>
-                <p className="text-xs text-gray-500">منذ 5 ساعات</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 p-3 bg-orange-50 rounded-lg">
-              <Tractor className="w-8 h-8 text-orange-600" />
-              <div>
-                <p className="text-sm">تحديث معدات الفلاحة</p>
-                <p className="text-xs text-gray-500">منذ يوم واحد</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Farmer Location View */}
       {userRegion && (
         <FarmerLocationView
           region={userRegion}

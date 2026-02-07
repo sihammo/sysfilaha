@@ -5,9 +5,10 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Sprout, LogIn, UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import api from "../utils/api";
 
 interface LoginScreenProps {
-  onLogin: (user: any) => void;
+  onLogin: (user: any, token: string) => void;
   onRegisterClick: () => void;
 }
 
@@ -17,55 +18,20 @@ export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenPro
     password: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    try {
+      const data = await api.auth.login({
+        nationalId: formData.identifier,
+        password: formData.password
+      });
 
-    // Try to login as admin first (if identifier is "admin" or looks like username)
-    const admin = users.find(
-      (u: any) =>
-        u.role === "admin" &&
-        u.password === formData.password &&
-        (formData.identifier === "admin" || formData.identifier === u.firstName)
-    );
-
-    if (admin) {
-      onLogin(admin);
-      toast.success(`مرحباً ${admin.firstName} ${admin.lastName}`);
-      return;
+      onLogin(data.user, data.token);
+      toast.success(`مرحباً ${data.user.firstName} ${data.user.lastName}`);
+    } catch (error: any) {
+      toast.error(error.message || "بيانات الدخول غير صحيحة");
     }
-
-    // Try to login as farmer (if identifier looks like national ID)
-    const farmer = users.find(
-      (u: any) =>
-        u.role === "farmer" &&
-        u.approved &&
-        u.nationalId === formData.identifier &&
-        u.password === formData.password
-    );
-
-    if (farmer) {
-      onLogin(farmer);
-      toast.success(`مرحباً ${farmer.firstName} ${farmer.lastName}`);
-      return;
-    }
-
-    // Check if farmer exists but not approved
-    const pendingFarmer = users.find(
-      (u: any) =>
-        u.role === "farmer" &&
-        !u.approved &&
-        u.nationalId === formData.identifier
-    );
-
-    if (pendingFarmer) {
-      toast.error("حسابك قيد المراجعة من قبل الإدارة. يرجى الانتظار");
-      return;
-    }
-
-    // No match found
-    toast.error("بيانات الدخول غير صحيحة");
   };
 
   return (
@@ -87,7 +53,6 @@ export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenPro
         </CardHeader>
 
         <CardContent className="space-y-6 pt-8">
-          {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="identifier" className="text-gray-700 font-semibold">
@@ -131,7 +96,6 @@ export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenPro
             </Button>
           </form>
 
-          {/* Divider */}
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300"></div>
@@ -141,7 +105,6 @@ export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenPro
             </div>
           </div>
 
-          {/* Registration Info */}
           <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 space-y-3">
             <h3 className="font-semibold text-green-800 text-center">فلاح جديد؟</h3>
             <p className="text-sm text-gray-700 text-center">
@@ -157,7 +120,6 @@ export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenPro
             </Button>
           </div>
 
-          {/* Demo Credentials */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700">
             <p className="font-semibold mb-1">بيانات تجريبية:</p>
             <p>اسم المستخدم (إدارة): admin</p>

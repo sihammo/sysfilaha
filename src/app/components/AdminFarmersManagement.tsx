@@ -6,15 +6,17 @@ import { Label } from "./ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Plus, Edit, Trash2, UserCheck, Users, Check, X } from "lucide-react";
 import { toast } from "sonner";
+import api from "../utils/api";
 
 interface Farmer {
-  id: string;
+  _id: string; // MongoDB ID
+  id: string; // Compatibility
   firstName: string;
   lastName: string;
   nationalId: string;
   farmerCardNumber?: string;
   role: string;
-  password: string;
+  password?: string;
   approved?: boolean;
   phone?: string;
   email?: string;
@@ -31,6 +33,7 @@ export default function AdminFarmersManagement() {
   const [pendingRequests, setPendingRequests] = useState<Farmer[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingFarmer, setEditingFarmer] = useState<Farmer | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -43,78 +46,64 @@ export default function AdminFarmersManagement() {
     loadFarmers();
   }, []);
 
-  const loadFarmers = () => {
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const farmerUsers = users.filter((u: Farmer) => u.role === "farmer");
-    const approved = farmerUsers.filter((f: Farmer) => f.approved !== false);
-    const pending = farmerUsers.filter((f: Farmer) => f.approved === false && f.status === "pending");
-    setFarmers(approved);
-    setPendingRequests(pending);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-
-    if (editingFarmer) {
-      // Update existing farmer
-      const updatedUsers = users.map((u: Farmer) =>
-        u.id === editingFarmer.id
-          ? { ...u, ...formData }
-          : u
-      );
-      localStorage.setItem("users", JSON.stringify(updatedUsers));
-      toast.success("تم تحديث بيانات الفلاح بنجاح");
-    } else {
-      // Check if national ID or farmer card number already exists
-      const exists = users.some(
-        (u: Farmer) =>
-          u.nationalId === formData.nationalId ||
-          (u.farmerCardNumber && u.farmerCardNumber === formData.farmerCardNumber)
-      );
-
-      if (exists) {
-        toast.error("رقم بطاقة التعريف أو رقم بطاقة الفلاح موجود مسبقاً");
-        return;
-      }
-
-      // Add new farmer
-      const newFarmer: Farmer = {
-        id: `farmer-${Date.now()}`,
-        ...formData,
-        role: "farmer",
-        approved: true,
-        status: "approved",
-      };
-      localStorage.setItem("users", JSON.stringify([...users, newFarmer]));
-      toast.success("تم إضافة الفلاح بنجاح");
+  const loadFarmers = async () => {
+    try {
+      setIsLoading(true);
+      const data = await api.admin.getFarmers();
+      const approved = data.filter((f: Farmer) => f.status === "approved");
+      const pending = data.filter((f: Farmer) => f.status === "pending");
+      setFarmers(approved);
+      setPendingRequests(pending);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to load farmers");
+    } finally {
+      setIsLoading(false);
     }
-
-    loadFarmers();
-    setIsDialogOpen(false);
-    resetForm();
   };
 
-  const handleApprove = (farmerId: string) => {
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const updatedUsers = users.map((u: Farmer) =>
-      u.id === farmerId
-        ? { ...u, approved: true, status: "approved" }
-        : u
-    );
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    loadFarmers();
-    toast.success("تم الموافقة على طلب التسجيل");
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const handleReject = (farmerId: string) => {
-    if (confirm("هل أنت متأكد من رفض هذا الطلب؟")) {
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
-      const updatedUsers = users.filter((u: Farmer) => u.id !== farmerId);
-      localStorage.setItem("users", JSON.stringify(updatedUsers));
+    try {
+      if (editingFarmer) {
+        await api.admin.updateFarmer(editingFarmer._id, formData);
+        toast.success("تم تحديث بيانات الفلاح بنجاح");
+      } else {
+        // Add new farmer via register (and then we approve them automically or just let them register)
+        await api.auth.register({
+          ...formData,
+          status: 'approved',
+          approved: true
+        });
+        toast.success("تم إضافة الفلاح بنجاح");
+      }
       loadFarmers();
-      toast.success("تم رفض الطلب بنجاح");
+      setIsDialogOpen(false);
+      resetForm();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save farmer");
+    }
+  };
+
+  const handleApprove = async (id: string) => {
+    try {
+      await api.admin.updateStatus(id, "approved");
+      loadFarmers();
+      toast.success("تم الموافقة على طلب التسجيل");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to approve");
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    if (confirm("هل أنت متأكد من رفض هذا الطلب؟")) {
+      try {
+        await api.admin.updateStatus(id, "rejected");
+        loadFarmers();
+        toast.success("تم رفض الطلب بنجاح");
+      } catch (error: any) {
+        toast.error(error.message || "Failed to reject");
+      }
     }
   };
 
@@ -136,27 +125,26 @@ export default function AdminFarmersManagement() {
       lastName: farmer.lastName,
       nationalId: farmer.nationalId,
       farmerCardNumber: farmer.farmerCardNumber || "",
-      password: farmer.password,
+      password: "", // Don't show password
     });
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("هل أنت متأكد من حذف هذا الفلاح؟ سيتم حذف جميع بياناته.")) {
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
-      const updatedUsers = users.filter((u: Farmer) => u.id !== id);
-      localStorage.setItem("users", JSON.stringify(updatedUsers));
-      
-      // Delete farmer's data
-      localStorage.removeItem(`crops_${id}`);
-      localStorage.removeItem(`sales_${id}`);
-      localStorage.removeItem(`resources_${id}`);
-      localStorage.removeItem(`livestocks-${id}`);
-      
-      loadFarmers();
-      toast.success("تم حذف الفلاح وجميع بياناته بنجاح");
+  const handleDelete = async (id: string) => {
+    if (confirm("هل أنت متأكد من حذف هذا الفلاح وجميع بياناته؟ لا يمكن التراجع عن هذه العملية.")) {
+      try {
+        await api.admin.deleteFarmer(id);
+        toast.success("تم حذف الفلاح وجميع بياناته بنجاح");
+        loadFarmers();
+      } catch (error: any) {
+        toast.error(error.message || "فشل حذف الفلاح");
+      }
     }
   };
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-gray-500">جاري التحميل...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -212,9 +200,6 @@ export default function AdminFarmersManagement() {
                   placeholder="13 رقم"
                   disabled={!!editingFarmer}
                 />
-                {editingFarmer && (
-                  <p className="text-xs text-gray-500 mt-1">لا يمكن تعديل رقم بطاقة التعريف</p>
-                )}
               </div>
 
               <div>
@@ -226,22 +211,21 @@ export default function AdminFarmersManagement() {
                   placeholder="مثال: FC123456 (اختياري)"
                   disabled={!!editingFarmer}
                 />
-                {editingFarmer && (
-                  <p className="text-xs text-gray-500 mt-1">لا يمكن تعديل رقم بطاقة الفلاح</p>
-                )}
               </div>
 
-              <div>
-                <Label htmlFor="password">كلمة المرور</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  required
-                  placeholder="أدخل كلمة المرور"
-                />
-              </div>
+              {!editingFarmer && (
+                <div>
+                  <Label htmlFor="password">كلمة المرور</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    required
+                    placeholder="أدخل كلمة المرور"
+                  />
+                </div>
+              )}
 
               <Button type="submit" className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800">
                 {editingFarmer ? "تحديث البيانات" : "تسجيل الفلاح"}
@@ -251,7 +235,6 @@ export default function AdminFarmersManagement() {
         </Dialog>
       </div>
 
-      {/* Pending Registration Requests */}
       {pendingRequests.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
@@ -260,7 +243,7 @@ export default function AdminFarmersManagement() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {pendingRequests.map((request) => (
-              <Card key={request.id} className="border-l-4 border-l-orange-500 bg-orange-50">
+              <Card key={request._id} className="border-l-4 border-l-orange-500 bg-orange-50">
                 <CardHeader>
                   <CardTitle className="text-lg text-orange-900">
                     {request.firstName} {request.lastName}
@@ -276,27 +259,19 @@ export default function AdminFarmersManagement() {
                       <span className="font-semibold">الولاية:</span> {request.region}
                     </p>
                     <p className="text-gray-600">
-                      <span className="font-semibold">مساحة الأرض:</span> {request.landArea} هكتار
-                    </p>
-                    <p className="text-gray-600">
                       <span className="font-semibold">الهاتف:</span> {request.phone}
                     </p>
-                    {request.email && (
-                      <p className="text-gray-600">
-                        <span className="font-semibold">البريد:</span> {request.email}
-                      </p>
-                    )}
                   </div>
                   <div className="flex gap-2 pt-2">
                     <Button
-                      onClick={() => handleApprove(request.id)}
+                      onClick={() => handleApprove(request._id)}
                       className="flex-1 bg-green-600 hover:bg-green-700 gap-1"
                     >
                       <Check className="w-4 h-4" />
                       الموافقة
                     </Button>
                     <Button
-                      onClick={() => handleReject(request.id)}
+                      onClick={() => handleReject(request._id)}
                       variant="destructive"
                       className="flex-1"
                     >
@@ -311,7 +286,6 @@ export default function AdminFarmersManagement() {
         </div>
       )}
 
-      {/* Summary Card */}
       <Card className="border-green-200 bg-gradient-to-r from-green-50 to-green-100">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-lg text-green-800">إجمالي الفلاحين المسجلين</CardTitle>
@@ -323,19 +297,17 @@ export default function AdminFarmersManagement() {
         </CardContent>
       </Card>
 
-      {/* Farmers List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {farmers.length === 0 ? (
           <Card className="col-span-full">
             <CardContent className="flex flex-col items-center justify-center py-12">
               <UserCheck className="w-16 h-16 text-gray-300 mb-4" />
               <p className="text-gray-500">لا يوجد فلاحين مسجلين</p>
-              <p className="text-sm text-gray-400">ابدأ بتسجيل الفلاح الأول أو وافق على طلبات التسجيل</p>
             </CardContent>
           </Card>
         ) : (
           farmers.map((farmer) => (
-            <Card key={farmer.id} className="hover:shadow-lg transition-shadow border-l-4 border-l-green-600">
+            <Card key={farmer._id} className="hover:shadow-lg transition-shadow border-l-4 border-l-green-600">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div>
@@ -361,11 +333,6 @@ export default function AdminFarmersManagement() {
                       <span className="text-gray-500 font-semibold">الولاية:</span> {farmer.region}
                     </p>
                   )}
-                  {farmer.landArea && (
-                    <p className="text-gray-700">
-                      <span className="text-gray-500 font-semibold">مساحة الأرض:</span> {farmer.landArea} هكتار
-                    </p>
-                  )}
                 </div>
 
                 <div className="flex gap-2 pt-2">
@@ -377,14 +344,6 @@ export default function AdminFarmersManagement() {
                   >
                     <Edit className="w-4 h-4 ml-2" />
                     تعديل
-                  </Button>
-                  <Button
-                    onClick={() => handleDelete(farmer.id)}
-                    variant="outline"
-                    size="sm"
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </CardContent>

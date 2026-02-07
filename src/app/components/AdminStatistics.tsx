@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Users, Sprout, TrendingUp, DollarSign, MapPin, Tractor } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from "recharts";
+import api from "../utils/api";
+import { toast } from "sonner";
 
 export default function AdminStatistics() {
   const [stats, setStats] = useState({
@@ -12,85 +14,29 @@ export default function AdminStatistics() {
     totalArea: 0,
     totalEquipment: 0,
   });
-  const [cropsByType, setCropsByType] = useState<any[]>([]);
-  const [farmerPerformance, setFarmerPerformance] = useState<any[]>([]);
-  const [revenueByFarmer, setRevenueByFarmer] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadStatistics();
   }, []);
 
-  const loadStatistics = () => {
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const farmers = users.filter((u: any) => u.role === "farmer");
-
-    let totalCrops = 0;
-    let totalRevenue = 0;
-    let totalLands = 0;
-    let totalArea = 0;
-    let totalEquipment = 0;
-    const cropTypesMap: any = {};
-    const farmerData: any[] = [];
-    const revenueData: any[] = [];
-
-    farmers.forEach((farmer: any) => {
-      const crops = JSON.parse(localStorage.getItem(`crops_${farmer.id}`) || "[]");
-      const sales = JSON.parse(localStorage.getItem(`sales_${farmer.id}`) || "[]");
-      const lands = JSON.parse(localStorage.getItem(`lands_${farmer.id}`) || "[]");
-      const equipment = JSON.parse(localStorage.getItem(`equipment_${farmer.id}`) || "[]");
-
-      totalCrops += crops.length;
-      totalLands += lands.length;
-      totalEquipment += equipment.length;
-
-      const farmerRevenue = sales.reduce((sum: number, sale: any) => sum + sale.totalPrice, 0);
-      totalRevenue += farmerRevenue;
-
-      const farmerArea = lands.reduce((sum: number, land: any) => sum + land.area, 0);
-      totalArea += farmerArea;
-
-      // Count crops by type
-      crops.forEach((crop: any) => {
-        cropTypesMap[crop.type] = (cropTypesMap[crop.type] || 0) + 1;
-      });
-
-      // Farmer performance data
-      farmerData.push({
-        name: `${farmer.firstName} ${farmer.lastName}`,
-        محاصيل: crops.length,
-        مبيعات: sales.length,
-        أراضي: lands.length,
-      });
-
-      // Revenue by farmer
-      if (farmerRevenue > 0) {
-        revenueData.push({
-          name: `${farmer.firstName} ${farmer.lastName}`,
-          إيرادات: farmerRevenue,
-        });
-      }
-    });
-
-    setStats({
-      totalFarmers: farmers.length,
-      totalCrops,
-      totalRevenue,
-      totalLands,
-      totalArea,
-      totalEquipment,
-    });
-
-    // Convert crop types to array
-    const cropTypesArray = Object.entries(cropTypesMap).map(([type, count]) => ({
-      name: type,
-      value: count,
-    }));
-    setCropsByType(cropTypesArray);
-    setFarmerPerformance(farmerData);
-    setRevenueByFarmer(revenueData);
+  const loadStatistics = async () => {
+    try {
+      setIsLoading(true);
+      const data = await api.admin.getStats();
+      setStats(data);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to load statistics");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const COLORS = ["#16a34a", "#84cc16", "#eab308", "#f97316", "#ef4444", "#8b5cf6"];
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-gray-500">جاري تحميل الإحصائيات...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -170,83 +116,6 @@ export default function AdminStatistics() {
         </Card>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Crops by Type */}
-        {cropsByType.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>المحاصيل حسب النوع</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={cropsByType}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={(entry) => `${entry.name} (${entry.value})`}
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {cropsByType.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Revenue by Farmer */}
-        {revenueByFarmer.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>الإيرادات حسب الفلاح</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={revenueByFarmer}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="إيرادات" fill="#eab308" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Farmer Performance */}
-        {farmerPerformance.length > 0 && (
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>أداء الفلاحين</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={350}>
-                <BarChart data={farmerPerformance}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="محاصيل" fill="#16a34a" />
-                  <Bar dataKey="مبيعات" fill="#3b82f6" />
-                  <Bar dataKey="أراضي" fill="#f97316" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* No Data Message */}
       {stats.totalFarmers === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
