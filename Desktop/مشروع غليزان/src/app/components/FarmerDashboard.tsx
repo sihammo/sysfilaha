@@ -21,7 +21,6 @@ import {
   MessageCircle,
   MapPin
 } from "lucide-react";
-import FarmDesigner from "./FarmDesigner";
 import FarmerReminders from "./FarmerReminders";
 import { LivestockManagement } from "./LivestockManagement";
 import SupportChat from "./SupportChat";
@@ -31,7 +30,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { Livestock } from "../App";
 import { Dog } from "lucide-react";
 
-type View = "dashboard" | "crops" | "livestock" | "sales" | "resources" | "reports" | "ai" | "designer" | "reminders" | "support" | "map";
+type View = "dashboard" | "crops" | "livestock" | "sales" | "resources" | "reports" | "ai" | "reminders" | "support" | "map";
 
 interface FarmerDashboardProps {
   currentUser: any;
@@ -64,7 +63,6 @@ export default function FarmerDashboard({ currentUser, onLogout }: FarmerDashboa
     { id: "resources" as View, label: "الأرض والعتاد", icon: Tractor },
     { id: "reports" as View, label: "السجلات", icon: FileText },
     { id: "ai" as View, label: "مرشد الفلاح", icon: Brain },
-    { id: "designer" as View, label: "مخطط الأرض", icon: Grid3X3 },
     { id: "reminders" as View, label: "التنبيهات", icon: Bell },
     { id: "support" as View, label: "الدعم الفني", icon: MessageCircle },
   ];
@@ -185,7 +183,6 @@ export default function FarmerDashboard({ currentUser, onLogout }: FarmerDashboa
                 {currentView === "resources" && <ResourcesManagement userId={currentUser.id} />}
                 {currentView === "reports" && <Reports userId={currentUser.id} />}
                 {currentView === "ai" && <AIAnalysis userId={currentUser.id} />}
-                {currentView === "designer" && <FarmDesigner />}
                 {currentView === "reminders" && <FarmerReminders userId={currentUser.id} />}
                 {currentView === "support" && <SupportChat currentUser={currentUser} />}
               </motion.div>
