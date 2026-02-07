@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import L from "leaflet";
+import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Button } from "./ui/button";
 import { MapPin, Save, Trash2 } from "lucide-react";
@@ -21,11 +21,15 @@ export default function FarmLocationMap({ userId, onLocationSave }: FarmLocation
   useEffect(() => {
     const saved = localStorage.getItem(`farmLocation_${userId}`);
     if (saved) {
-      const parsed = JSON.parse(saved);
-      setFarmLocation(parsed);
-      setSavedLocations(Array.isArray(parsed) ? parsed : [parsed]);
-      if (!Array.isArray(parsed)) {
-        setFarmName(parsed.name);
+      try {
+        const parsed = JSON.parse(saved);
+        setFarmLocation(parsed);
+        setSavedLocations(Array.isArray(parsed) ? parsed : [parsed]);
+        if (!Array.isArray(parsed)) {
+          setFarmName(parsed.name);
+        }
+      } catch (e) {
+        console.error("Error parsing saved location:", e);
       }
     }
   }, [userId]);
@@ -145,8 +149,8 @@ export default function FarmLocationMap({ userId, onLocationSave }: FarmLocation
         {/* Map Container */}
         <div
           ref={mapContainer}
-          className="flex-1 min-h-[500px] bg-gray-100"
-          style={{ height: "calc(100% - 200px)" }}
+          className="flex-1 min-h-[500px] bg-gray-100 relative z-0"
+          style={{ height: "600px" }}
         />
 
         {/* Controls */}

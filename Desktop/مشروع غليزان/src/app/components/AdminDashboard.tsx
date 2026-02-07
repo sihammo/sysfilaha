@@ -14,13 +14,13 @@ import {
   LayoutGrid,
   Bell,
   MessageCircle,
-  MapPin
+  Map
 } from "lucide-react";
 import SupportChat from "./SupportChat";
 import { Button } from "./ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
-type View = "farmers" | "statistics" | "ai" | "map" | "support";
+type View = "farmers" | "statistics" | "ai" | "support" | "map";
 
 interface AdminDashboardProps {
   currentUser: any;
@@ -52,7 +52,7 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
 
   const menuItems = [
     { id: "farmers" as View, label: "منظومة الفلاحين", icon: Users, hasNotification: pendingCount > 0 },
-    { id: "map" as View, label: "خريطة الأراضي", icon: MapPin, hasNotification: false },
+    { id: "map" as View, label: "خريطة الأراضي", icon: Map, hasNotification: false },
     { id: "statistics" as View, label: "التقارير التحليلية", icon: BarChart3, hasNotification: false },
     { id: "ai" as View, label: "مركز الذكاء الإداري", icon: Brain, hasNotification: false },
     { id: "support" as View, label: "مركز التواصل", icon: MessageCircle, hasNotification: false },
