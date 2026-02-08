@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Sprout, User, Building2 } from 'lucide-react';
-import { Button } from '@/app/components/ui/button';
-import { Input } from '@/app/components/ui/input';
-import { Label } from '@/app/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/app/components/ui/radio-group';
-import type { User as UserType } from '@/app/App';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import type { User as UserType } from '../App';
 
 interface AuthScreenProps {
   onLogin: (user: UserType) => void;
