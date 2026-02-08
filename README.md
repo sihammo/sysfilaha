@@ -1,11 +1,22 @@
+# منصة الفلاح (Al-Fallah Platform)
 
-  # استكمال المشروع
+**إدارة ذكية للزراعة الجزائرية**
 
-  This is a code bundle for استكمال المشروع. The original project is available at https://www.figma.com/design/HedW6FpESdn1gRyNyvU4yf/%D8%A7%D8%B3%D8%AA%D9%83%D9%85%D8%A7%D9%84-%D8%A7%D9%84%D9%85%D8%B4%D8%B1%D9%88%D8%B9.
+منصة رقمية متكاملة مصممة لربط الفلاحين بالإدارة، وتحليل البيانات الفلاحية باستخدام الذكاء الاصطناعي.
 
-  ## Running the code
+## المميزات (Features)
+- **إدارة الموارد الفلاحية**: تتبع المحاصيل، المواشي، والعتاد.
+- **خرائط تفاعلية ذكية**: تحديد مواقع المزارع ورسم حدود الأراضي بدقة.
+- **تحليل بيانات بالذكاء الاصطناعي**: الحصول على توصيات زراعية وتنبيهات طقس ذكية.
+- **تقارير مالية شاملة**: مراقبة المبيعات وتكاليف التشغيل.
 
-  Run `npm i` to install the dependencies.
+## التقنيات المستخدمة (Tech Stack)
+- **Frontend**: React + Vite + Tailwind CSS
+- **Backend**: Node.js + Express
+- **Database**: MongoDB
+- **Maps**: Leaflet.js
 
-  Run `npm run dev` to start the development server.
-  
+## التشغيل (Setup)
+1. قم بتركيب التبعات: `npm install`
+2. تشغيل السيرفر: `node server/index.js`
+3. تشغيل الواجهة: `npm run dev`

@@ -71,6 +71,7 @@ const api = {
         addWorker: (data: any) => api.request('/farmer/workers', 'POST', data),
         updateWorker: (id: string, data: any) => api.request(`/farmer/workers/${id}`, 'PUT', data),
         deleteWorker: (id: string) => api.request(`/farmer/workers/${id}`, 'DELETE'),
+        getAiConsultation: () => api.request('/farmer/ai-consultation'),
     },
 
     admin: {
@@ -83,6 +84,7 @@ const api = {
         getMonthlyGrowth: () => api.request('/admin/monthly-growth'),
         getTopFarmers: () => api.request('/admin/top-farmers'),
         deleteFarmer: (id: string) => api.request(`/admin/farmers/${id}`, 'DELETE'),
+        runAiAnalysis: () => api.request('/admin/ai-analysis', 'POST'),
     }
 };
 

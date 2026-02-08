@@ -33,14 +33,16 @@ interface Recommendation {
 
 export default function AIAnalysis({ userId }: AIAnalysisProps) {
   const [analyzing, setAnalyzing] = useState(false);
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [summary, setSummary] = useState<any>(null);
   const [lastAnalysis, setLastAnalysis] = useState<Date | null>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem(`ai_analysis_${userId}`);
+    const saved = localStorage.getItem(`ai_analysis_result_${userId}`);
     if (saved) {
       const data = JSON.parse(saved);
       setRecommendations(data.recommendations);
+      setSummary(data.summary);
       setLastAnalysis(new Date(data.date));
     }
   }, [userId]);
@@ -48,88 +50,21 @@ export default function AIAnalysis({ userId }: AIAnalysisProps) {
   const analyzeData = async () => {
     try {
       setAnalyzing(true);
+      const data = await api.farmer.getAiConsultation();
 
-      // Fetch fresh data from backend
-      const [crops, sales, lands, workers] = await Promise.all([
-        api.farmer.getCrops(),
-        api.farmer.getSales(),
-        api.farmer.getLands(),
-        api.farmer.getWorkers()
-      ]);
-
-      const newRecommendations: Recommendation[] = [];
-
-      // Analyze crops & land
-      const totalArea = lands.reduce((sum: number, land: any) => sum + (land.area || 0), 0);
-      const usedArea = crops.reduce((sum: number, crop: any) => sum + (crop.area || 0), 0);
-      const unusedArea = totalArea - usedArea;
-
-      if (unusedArea > 0) {
-        newRecommendations.push({
-          id: "rec-1",
-          type: "info",
-          title: "فرصة لتوسيع الإنتاج",
-          description: `لديك ${unusedArea.toFixed(1)} هكتار غير مستغل. يُنصح باستثمار هذه المساحة لزيادة العائدات والإنتاجية.`,
-          priority: "medium",
-        });
-      }
-
-      // Analyze financial performance
-      const totalRevenue = sales.reduce((sum: number, sale: any) => sum + (sale.totalPrice || 0), 0);
-      const totalExpenses = workers.reduce((sum: number, worker: any) => sum + (worker.salary || 0), 0);
-      const profit = totalRevenue - totalExpenses;
-
-      if (profit < 0) {
-        newRecommendations.push({
-          id: "rec-3",
-          type: "warning",
-          title: "تنبيه: عجز مالي مسجل",
-          description: `الوضع المالي الحالي يظهر عجزاً. يُنصح بمراجعة هيكل المصروفات وتحسين استراتيجيات البيع.`,
-          priority: "high",
-        });
-      } else if (profit > 0) {
-        newRecommendations.push({
-          id: "rec-profit",
-          type: "success",
-          title: "أداء مالي إيجابي",
-          description: `تحقق صافي ربح قدره ${profit.toLocaleString()} دج. استمر في هذا النهج وفكر في التوسع.`,
-          priority: "low",
-        });
-      }
-
-      // Crop diversity analysis
-      if (crops.length < 3) {
-        newRecommendations.push({
-          id: "rec-diversity",
-          type: "info",
-          title: "تنويع المحاصيل",
-          description: "يُنصح بزراعة أنواع متعددة من المحاصيل لتقليل المخاطر وزيادة الاستقرار المالي.",
-          priority: "medium",
-        });
-      }
-
-      // Simple seasonal logic
-      const month = new Date().getMonth();
-      if (month >= 8 && month <= 10) {
-        newRecommendations.push({
-          id: "rec-6",
-          type: "info",
-          title: "موسم الزراعة الشتوية",
-          description: "الآن موسم مناسب لزراعة القمح والشعير والبقوليات. استعد للموسم الشتوي بالتخطيط المسبق.",
-          priority: "medium",
-        });
-      }
-
-      setRecommendations(newRecommendations);
+      setRecommendations(data.recommendations);
+      setSummary(data.summary);
       setLastAnalysis(new Date());
-      localStorage.setItem(`ai_analysis_${userId}`, JSON.stringify({
-        recommendations: newRecommendations,
+
+      localStorage.setItem(`ai_analysis_result_${userId}`, JSON.stringify({
+        recommendations: data.recommendations,
+        summary: data.summary,
         date: new Date().toISOString(),
       }));
 
-      toast.success("تم تحليل البيانات بنجاح باستخدام الذكاء الاصطناعي");
+      toast.success("تم تحليل البيانات وتوليد التوصيات بنجاح");
     } catch (error) {
-      toast.error("فشل تحليل البيانات");
+      toast.error("فشل في الحصول على الاستشارات الذكية");
     } finally {
       setAnalyzing(false);
     }

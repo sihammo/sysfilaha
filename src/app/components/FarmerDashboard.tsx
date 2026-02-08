@@ -7,6 +7,7 @@ import ResourcesManagement from "./ResourcesManagement";
 import Reports from "./Reports";
 import AIAnalysis from "./AIAnalysis";
 import LivestockManagement from "./LivestockManagement";
+import BrandingLogo from "./BrandingLogo";
 import {
   LayoutDashboard,
   Sprout,
@@ -100,22 +101,14 @@ export default function FarmerDashboard({ currentUser, onLogout }: FarmerDashboa
           "shadow-[4px_0_24px_rgba(0,0,0,0.02)]"
         )}
       >
-        <div className="p-6 flex items-center gap-3 h-20">
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
-            <Sprout className="text-white w-6 h-6" />
-          </div>
-          {isSidebarOpen && (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="font-bold text-xl tracking-tight text-slate-800"
-            >
-              سيس فلاح
-            </motion.span>
-          )}
+        <div className="p-6 flex items-center gap-3 h-20 overflow-hidden">
+          <BrandingLogo
+            iconOnly={!isSidebarOpen}
+            isBilingual={false}
+          />
         </div>
 
-        <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
+        <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto outline-none border-none">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
@@ -143,9 +136,9 @@ export default function FarmerDashboard({ currentUser, onLogout }: FarmerDashboa
                   <motion.div
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="flex-1 flex items-center justify-between"
+                    className="flex-1 flex items-center justify-between overflow-hidden"
                   >
-                    <span className="font-bold text-sm tracking-wide">{item.label}</span>
+                    <span className="font-bold text-sm tracking-wide truncate">{item.label}</span>
                     {item.count !== undefined && (
                       <span className={cn(
                         "px-2 py-0.5 rounded-full text-[10px] font-black min-w-[20px] text-center",
@@ -181,12 +174,12 @@ export default function FarmerDashboard({ currentUser, onLogout }: FarmerDashboa
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* Modern Header */}
-        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-30">
+        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-30 shrink-0">
           <div className="flex items-center gap-4 lg:hidden">
             <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(true)}>
               <Menu className="w-6 h-6" />
             </Button>
-            <span className="font-bold text-lg">سيس فلاح</span>
+            <span className="font-bold text-lg text-primary">منصة الفلاح</span>
           </div>
 
           <div className="hidden md:flex flex-col relative">
@@ -315,9 +308,7 @@ export default function FarmerDashboard({ currentUser, onLogout }: FarmerDashboa
               className="fixed top-0 right-0 h-full w-80 bg-white z-[60] lg:hidden flex flex-col shadow-2xl"
             >
               <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                <span className="font-bold text-xl text-primary flex items-center gap-2">
-                  <Sprout className="w-6 h-6" /> سيس فلاح
-                </span>
+                <BrandingLogo />
                 <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
                   <X className="w-6 h-6" />
                 </Button>

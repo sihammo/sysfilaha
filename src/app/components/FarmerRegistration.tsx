@@ -99,7 +99,7 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
       <div className="hidden lg:flex lg:col-span-1 bg-slate-900 flex-col p-8 text-white relative">
         <div className="flex items-center gap-3 mb-12">
           <Sprout className="w-8 h-8 text-emerald-400" />
-          <span className="font-bold text-xl">سيس فلاح</span>
+          <span className="font-bold text-xl">منصة الفلاح</span>
         </div>
 
         <div className="flex-1 space-y-8 relative">

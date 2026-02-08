@@ -458,7 +458,7 @@ router.get('/dashboard-data', auth, async (req, res) => {
         });
 
         if (lastMonthSales.length === 0 && crops.length > 0) {
-            recommendations.push({ type: 'alert', message: 'تنبيه: لم يتم تسجيل أي مبيعات خلال الشهر الماضي. هل ترغب في المساعدة في التسويق عبر منصة سيس فلاح؟' });
+            recommendations.push({ type: 'alert', message: 'تنبيه: لم يتم تسجيل أي مبيعات خلال الشهر الماضي. هل ترغب في المساعدة في التسويق عبر منصة الفلاح؟' });
         }
 
         if (recommendations.length === 0) {
@@ -520,6 +520,222 @@ router.get('/search', auth, async (req, res) => {
         res.json(results);
     } catch (err) {
         res.status(500).json({ msg: 'Server error' });
+    }
+});
+
+const { getFreeWeatherData } = require('../services/weatherService');
+
+// @route   GET api/farmer/ai-consultation
+// @desc    Get personalized AI consultations for the farmer (100% FREE)
+// @access  Private
+router.get('/ai-consultation', auth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const recommendations = [];
+
+        // 1. Get detailed farmer data
+        const [farmer, crops, sales, equipment, workers, land] = await Promise.all([
+            User.findById(userId),
+            Crop.find({ user: userId }),
+            Sale.find({ user: userId }),
+            Equipment.find({ user: userId }),
+            Worker.find({ user: userId }),
+            Land.findOne({ user: userId })
+        ]);
+
+        if (!farmer) return res.status(404).json({ msg: 'Farmer not found' });
+
+        // 2. WEATHER-BASED RECOMMENDATIONS (FREE API)
+        const coords = (land && land.coordinates && land.coordinates.length > 0)
+            ? { lat: land.coordinates[0].lat, lng: land.coordinates[0].lng }
+            : (farmer.lat && farmer.lng) ? { lat: farmer.lat, lng: farmer.lng } : null;
+
+        if (coords) {
+            try {
+                const weather = await getFreeWeatherData(coords.lat, coords.lng);
+                if (weather) {
+                    // High temperature
+                    if (weather.current.temp > 32) {
+                        recommendations.push({
+                            type: 'warning',
+                            priority: 'high',
+                            category: 'الطقس',
+                            title: 'تحذير: حرارة مرتفعة',
+                            message: `درجة الحرارة الحالية ${Math.round(weather.current.temp)}°م.`,
+                            action: 'زد من وتيرة الري في الصباح الباكر أو المساء لحماية المحاصيل من الإجهاد الحراري.',
+                            icon: '🌡️'
+                        });
+                    }
+                    // Cold temperature
+                    if (weather.current.temp < 5) {
+                        recommendations.push({
+                            type: 'warning',
+                            priority: 'high',
+                            category: 'الطقس',
+                            title: 'تحذير: برودة شديدة',
+                            message: `درجة الحرارة منخفضة جداً (${Math.round(weather.current.temp)}°م) - خطر الصقيع.`,
+                            action: 'احمِ المحاصيل الحساسة باستخدام الري التضاربي أو التغطية البلاستيكية.',
+                            icon: '❄️'
+                        });
+                    }
+                    // Rain forecast
+                    if (weather.daily.precipitation > 5) {
+                        recommendations.push({
+                            type: 'info',
+                            priority: 'medium',
+                            category: 'الطقس',
+                            title: 'أمطار متوقعة',
+                            message: `توقعات بهطول ${weather.daily.precipitation} مم من الأمطار.`,
+                            action: 'أجّل عمليات التسميد أو الرش الكيماوي لضمان عدم ضياعها مع الجريان السطحي.',
+                            icon: '🌧️'
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error("AI Weather fetch failed", e);
+            }
+        }
+
+        // 3. LAND UTILIZATION ANALYSIS
+        const totalArea = land ? land.area : (parseFloat(farmer.landArea) || 0);
+        const plantedArea = crops.reduce((sum, c) => sum + (c.area || 0), 0);
+        const availableArea = totalArea - plantedArea;
+
+        if (availableArea > 0.5) {
+            const potentialRevenue = availableArea * 50000;
+            recommendations.push({
+                type: 'opportunity',
+                priority: 'medium',
+                category: 'استغلال الأرض',
+                title: 'فرصة توسع زراعي',
+                message: `لديك ${availableArea.toFixed(2)} هكتار غير مستغلة حالياً.`,
+                action: `زراعة هذه المساحة بمحاصيل موسمية قد تحقق لك عوائد إضافية تصل إلى ${potentialRevenue.toLocaleString('ar-DZ')} دج.`,
+                icon: '🌱'
+            });
+        }
+
+        // 4. FINANCIAL PERFORMANCE
+        const totalRevenue = sales.reduce((sum, s) => sum + (s.totalPrice || 0), 0);
+        const totalCosts = equipment.reduce((sum, e) => sum + (e.cost || 0), 0) +
+            workers.reduce((sum, w) => sum + (w.salary || 0) * 12, 0);
+        const profit = totalRevenue - totalCosts;
+        const profitMargin = totalRevenue > 0 ? ((profit / totalRevenue) * 100).toFixed(2) : 0;
+
+        if (totalRevenue > 0) {
+            if (profitMargin < 20) {
+                recommendations.push({
+                    type: 'warning',
+                    priority: 'high',
+                    category: 'الأداء المالي',
+                    title: 'تنبيه: هامش ربح منخفض',
+                    message: `هامش الربح المقدر هو ${profitMargin}% فقط.`,
+                    action: 'راجع هيكل التكاليف (خاصة العمالة والعتاد) أو ابحث عن قنوات تسويق مباشرة لزيادة أسعار البيع.',
+                    icon: '💰'
+                });
+            } else if (profitMargin >= 35) {
+                recommendations.push({
+                    type: 'success',
+                    priority: 'low',
+                    category: 'الأداء المالي',
+                    title: 'أداء مالي متميز',
+                    message: `هامش ربح ممتاز (${profitMargin}%).`,
+                    action: 'استمر في إدارة مواردك بهذا النجاح وفكر في الاستثمار في تقنيات الري الذكي.',
+                    icon: '✅'
+                });
+            }
+        }
+
+        // 5. SALES ACTIVITY MONITORING
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const last30DaysSales = sales.filter(s => new Date(s.saleDate) > thirtyDaysAgo);
+
+        if (last30DaysSales.length === 0 && crops.length > 0) {
+            recommendations.push({
+                type: 'warning',
+                priority: 'medium',
+                category: 'المبيعات',
+                title: 'ركود في نشاط المبيعات',
+                message: 'لم يتم تسجيل أي عمليات بيع خلال الـ 30 يوماً الماضية رغم وجود محاصيل.',
+                action: 'تأكد من تحديث أسعارك في المنصة أو استكشف أسواق الجملة القريبة لتصريف الإنتاج.',
+                icon: '📊'
+            });
+        }
+
+        // 6. CROP DIVERSITY
+        const uniqueCropNames = [...new Set(crops.map(c => c.name))];
+        if (crops.length > 0 && uniqueCropNames.length === 1) {
+            recommendations.push({
+                type: 'warning',
+                priority: 'medium',
+                category: 'التنوع الزراعي',
+                title: 'اعتماد على كلي على محصول واحد',
+                message: `تزرع حالياً نوعاً واحداً فقط (${uniqueCropNames[0]}).`,
+                action: 'التنويع الزراعي (الدورة الزراعية) يقلل من مخاطر الأمراض النباتية ويضمن استقراراً مالياً أفضل.',
+                icon: '🌾'
+            });
+        }
+
+        // 7. SEASONAL ADVICE
+        const month = new Date().getMonth() + 1;
+        const seasons = {
+            spring: { title: 'نصائح الربيع', action: 'تحضير الأرض لزراعة المحاصيل الصيفية والتركيز على مكافحة الآفات الربيعية.', icon: '🌸' },
+            summer: { title: 'نصائح الصيف', action: 'تنظيم الري بصرامة (صباحاً/مساءً) وحماية الثمار من لفحة الشمس.', icon: '☀️' },
+            autumn: { title: 'نصائح الخريف', action: 'موسم الحرث والبذر للحبوب (القمح والشعير). جهز بذورك وسمادك الآن.', icon: '🍂' },
+            winter: { title: 'نصائح الشتاء', action: 'صيانة العتاد الزراعي وحماية البيوت البلاستيكية من الرياح القوية والصقيع.', icon: '❄️' }
+        };
+
+        let advice = seasons.winter;
+        if (month >= 3 && month <= 5) advice = seasons.spring;
+        else if (month >= 6 && month <= 8) advice = seasons.summer;
+        else if (month >= 9 && month <= 11) advice = seasons.autumn;
+
+        recommendations.push({
+            type: 'info',
+            priority: 'low',
+            category: 'نصائح موسمية',
+            title: advice.title,
+            message: `نحن في موسم ${advice.title.split(' ')[1]}.`,
+            action: advice.action,
+            icon: advice.icon
+        });
+
+        // 8. EQUIPMENT MAINTENANCE
+        if (equipment.length > 0) {
+            const needsMaintenance = equipment.filter(e => {
+                const lastM = e.lastMaintenanceDate || farmer.registrationDate;
+                const daysSince = Math.floor((Date.now() - new Date(lastM)) / (1000 * 60 * 60 * 24));
+                return daysSince > 90;
+            });
+            if (needsMaintenance.length > 0) {
+                recommendations.push({
+                    type: 'warning',
+                    priority: 'medium',
+                    category: 'صيانة العتاد',
+                    title: 'صيانة دورية مطلوبة',
+                    message: `لديك ${needsMaintenance.length} معدة لم يتم فحصها منذ فترة طويلة.`,
+                    action: 'قم بإجراء صيانة وقائية لتجنب الأعطال المفاجئة خلال موسم الذروة.',
+                    icon: '🔧'
+                });
+            }
+        }
+
+        // Sort by priority
+        const priorityOrder = { high: 1, medium: 2, low: 3 };
+        recommendations.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+
+        res.json({
+            success: true,
+            recommendations,
+            summary: {
+                total: recommendations.length,
+                highPriority: recommendations.filter(r => r.priority === 'high').length,
+                opportunities: recommendations.filter(r => r.category === 'استغلال الأرض').length
+            }
+        });
+
+    } catch (error) {
+        console.error('AI Consultation Error:', error);
+        res.status(500).json({ success: false, msg: 'فشل في توليد الاستشارات الذكية' });
     }
 });
 

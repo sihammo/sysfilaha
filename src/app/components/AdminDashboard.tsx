@@ -4,6 +4,7 @@ import AdminFarmersManagement from "./AdminFarmersManagement";
 import AdminStatistics from "./AdminStatistics";
 import AdminAIAnalysis from "./AdminAIAnalysis";
 import FarmersLocationMap from "./FarmersLocationMap";
+import BrandingLogo from "./BrandingLogo";
 import {
   Users,
   BarChart3,
@@ -11,7 +12,6 @@ import {
   Menu,
   X,
   LogOut,
-  Sprout,
   MapPin,
   ShieldAlert,
   Search,
@@ -75,17 +75,17 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
         )}
       >
         <div className="p-6 flex items-center gap-3 h-20 bg-slate-950/40">
-          <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20">
-            <ShieldAlert className="text-white w-6 h-6" />
-          </div>
+          <BrandingLogo
+            iconOnly={!isSidebarOpen}
+            textColor="text-white"
+          />
           {isSidebarOpen && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex flex-col"
+              className="flex flex-col ml-1"
             >
-              <span className="font-bold text-lg text-white leading-none">لوحة المدير</span>
-              <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mt-1">SysFilaha Admin</span>
+              <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest leading-none">لوحة الإدارة</span>
             </motion.div>
           )}
         </div>
@@ -99,18 +99,21 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
                 key={item.id}
                 onClick={() => setCurrentView(item.id)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all group relative",
-                  isActive
-                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/25"
-                    : "hover:bg-slate-800 text-slate-400 hover:text-white"
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group",
+                  isActive ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "hover:bg-slate-800"
                 )}
               >
-                <Icon className={cn("w-5 h-5 shrink-0 transition-transform group-hover:scale-110", isActive ? "text-white" : item.color)} />
+                <div className={cn(
+                  "p-2 rounded-lg transition-colors",
+                  isActive ? "bg-white/20" : "bg-slate-800 group-hover:bg-slate-700"
+                )}>
+                  <Icon className={cn("w-5 h-5", isActive ? "text-white" : item.color)} />
+                </div>
                 {isSidebarOpen && (
                   <motion.span
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="font-medium"
+                    className="font-bold text-sm"
                   >
                     {item.label}
                   </motion.span>
@@ -121,82 +124,90 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
         </nav>
 
         <div className="p-4 border-t border-slate-800">
-          <Button
-            variant="ghost"
-            onClick={onLogout}
-            className="w-full justify-start gap-3 text-slate-400 hover:text-rose-400 hover:bg-rose-400/10 rounded-xl h-12"
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="w-full h-10 flex items-center justify-center hover:bg-slate-800 rounded-lg text-slate-500 transition-colors"
           >
-            <LogOut className="w-5 h-5" />
-            {isSidebarOpen && <span>خروج من النظام</span>}
+            <ChevronLeft className={cn("w-5 h-5 transition-transform", !isSidebarOpen && "rotate-180")} />
+          </button>
+          <Button
+            onClick={onLogout}
+            variant="ghost"
+            className="w-full mt-2 text-slate-400 hover:text-white hover:bg-rose-500/10 flex items-center justify-center gap-2 group"
+          >
+            <LogOut className="w-5 h-5 group-hover:text-rose-500" />
+            {isSidebarOpen && <span className="font-bold">تسجيل الخروج</span>}
           </Button>
         </div>
       </motion.aside>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        {/* Modern Header */}
-        <header className="h-20 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="h-20 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-4 lg:hidden">
             <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(true)}>
               <Menu className="w-6 h-6" />
             </Button>
-            <span className="font-bold text-lg">سيس فلاح</span>
+            <Button variant="ghost" className="p-0 hover:bg-transparent">
+              <BrandingLogo iconOnly />
+            </Button>
           </div>
 
           <div className="hidden md:flex items-center gap-6">
-            <div className="flex items-center gap-2 text-slate-400 text-sm">
-              <Activity className="w-4 h-4" />
-              <span>حالة النظام: <span className={cn("font-bold", stats.systemStatus === "connected" ? "text-emerald-500" : "text-rose-500")}>
-                {stats.systemStatus === "connected" ? "متصل" : stats.systemStatus === "connecting" ? "جاري الاتصال..." : "غير متصل"}
-              </span></span>
-            </div>
-            <div className="h-4 w-px bg-slate-200" />
-            <div className="flex items-center gap-2 text-slate-400 text-sm">
-              <Users className="w-4 h-4" />
-              <span>الفلاحين النشطين: <span className="text-slate-900 font-bold">{stats.activeFarmers.toLocaleString()}</span></span>
+            <div className="flex items-center gap-4 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-emerald-500" />
+                <span className={cn("text-xs font-bold", stats.systemStatus === 'connecting' ? 'text-amber-500' : 'text-emerald-500')}>
+                  {stats.systemStatus === 'connecting' ? 'جاري الاتصال...' : 'النظام متصل'}
+                </span>
+              </div>
+              <div className="w-px h-4 bg-slate-200" />
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-blue-500" />
+                <span className="text-xs font-bold text-slate-600">{stats.totalFarmers} فلاح مسجل</span>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="text-slate-500 relative bg-slate-50 border border-slate-100 rounded-xl">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="text-slate-400 relative">
               <Bell className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full" />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white" />
             </Button>
-
-            <div className="flex items-center gap-3 pl-2">
-              <div className="text-left hidden md:block">
-                <p className="text-sm font-bold text-slate-900 leading-none">{currentUser.firstName}</p>
-                <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wider font-bold">مشرف النظام المركزي</p>
+            <Button variant="ghost" size="icon" className="text-slate-400">
+              <Settings className="w-5 h-5" />
+            </Button>
+            <div className="h-8 w-px bg-slate-200 mx-2" />
+            <div className="flex items-center gap-3">
+              <div className="text-left hidden sm:block">
+                <p className="text-sm font-bold text-slate-900 leading-none">مدير النظام</p>
+                <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest mt-1">Super Admin</p>
               </div>
-              <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center border border-emerald-200 cursor-pointer group shadow-sm transition-all hover:shadow-md">
-                <User className="w-5 h-5 text-emerald-700" />
+              <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200">
+                <User className="w-5 h-5 text-slate-600" />
               </div>
             </div>
           </div>
         </header>
 
-        {/* Dashboard Content */}
-        <main className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-[1600px] mx-auto space-y-8">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentView}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
-                {currentView === "farmers" && <AdminFarmersManagement />}
-                {currentView === "locations" && <FarmersLocationMap />}
-                {currentView === "statistics" && <AdminStatistics />}
-                {currentView === "ai" && <AdminAIAnalysis />}
-              </motion.div>
-            </AnimatePresence>
-          </div>
+        <main className="flex-1 overflow-y-auto p-8 bg-[#f8fafc]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentView}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              {currentView === "farmers" && <AdminFarmersManagement />}
+              {currentView === "locations" && <FarmersLocationMap />}
+              {currentView === "statistics" && <AdminStatistics />}
+              {currentView === "ai" && <AdminAIAnalysis />}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 
-      {/* Mobile Drawer (Same as Farmer but emerald) */}
+      {/* Mobile Drawer */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
@@ -211,18 +222,17 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
-              className="fixed top-0 right-0 h-full w-80 bg-slate-900 z-[60] lg:hidden flex flex-col"
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 h-full w-80 bg-slate-900 z-[60] lg:hidden flex flex-col shadow-2xl"
             >
-              <div className="p-8 border-b border-slate-800 flex items-center justify-between">
-                <span className="font-bold text-xl text-emerald-400 flex items-center gap-2">
-                  <ShieldAlert className="w-6 h-6" /> الإدارة
-                </span>
-                <Button variant="ghost" size="icon" className="text-white" onClick={() => setIsMobileMenuOpen(false)}>
+              <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+                <BrandingLogo textColor="text-white" />
+                <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)} className="text-white">
                   <X className="w-6 h-6" />
                 </Button>
               </div>
 
-              <div className="flex-1 p-6 space-y-3">
+              <div className="flex-1 p-4 space-y-2">
                 {menuItems.map((item) => (
                   <button
                     key={item.id}
@@ -232,9 +242,7 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
                     }}
                     className={cn(
                       "w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all",
-                      currentView === item.id
-                        ? "bg-emerald-600 text-white shadow-xl"
-                        : "text-slate-400 hover:bg-slate-800"
+                      currentView === item.id ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "text-slate-400 hover:bg-slate-800"
                     )}
                   >
                     <item.icon className="w-6 h-6" />
@@ -243,13 +251,13 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
                 ))}
               </div>
 
-              <div className="p-8 border-t border-slate-800">
+              <div className="p-6 border-t border-slate-800">
                 <Button
                   onClick={onLogout}
-                  variant="outline"
-                  className="w-full h-14 border-rose-500/20 text-rose-500 hover:bg-rose-500/10 rounded-2xl"
+                  variant="ghost"
+                  className="w-full h-14 text-rose-500 hover:bg-rose-500/10 rounded-2xl font-bold flex gap-2"
                 >
-                  <LogOut className="w-5 h-5" /> خروج نهائي
+                  <LogOut className="w-5 h-5" /> تسجيل الخروج
                 </Button>
               </div>
             </motion.div>

@@ -38,9 +38,9 @@ export function AuthScreen({ onLogin }: AuthScreenProps) {
               <Sprout className="w-12 h-12 text-green-600" />
             </div>
           </div>
-          <CardTitle className="text-2xl">تطبيق تسيير المزرعة</CardTitle>
+          <CardTitle className="text-2xl">منصة الفلاح</CardTitle>
           <CardDescription className="text-base">
-            نظام رقمي لإدارة المحاصيل والثروة الحيوانية
+            إدارة ذكية وشاملة للنشاطات الفلاحية بالجزائر
           </CardDescription>
         </CardHeader>
         <CardContent>
