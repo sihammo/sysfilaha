@@ -6,9 +6,10 @@ import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { Plus, Edit, Trash2, MapPin, Tractor, Users } from "lucide-react";
+import { Plus, Edit, Trash2, MapPin, Tractor, Users, Map as MapIcon } from "lucide-react";
 import { toast } from "sonner";
 import api from "../utils/api";
+import LeafletLandDrawing from "./LeafletLandDrawing";
 
 interface Land {
   _id: string;
@@ -17,6 +18,7 @@ interface Land {
   location: string;
   soilType: string;
   status: string;
+  coordinates?: { lat: number, lng: number }[];
 }
 
 interface Equipment {
@@ -48,13 +50,14 @@ export default function ResourcesManagement({ userId }: { userId: string }) {
   const [eqDialogOpen, setEqDialogOpen] = useState(false);
   const [workerDialogOpen, setWorkerDialogOpen] = useState(false);
 
-  const [landForm, setLandForm] = useState({ name: "", area: "", location: "", soilType: "طينية", status: "متاح" });
+  const [landForm, setLandForm] = useState({ name: "", area: "", location: "", soilType: "طينية", status: "متاح", coordinates: [] as { lat: number, lng: number }[] });
   const [eqForm, setEqForm] = useState({ name: "", type: "جرار", purchaseDate: "", condition: "جيد" });
   const [workerForm, setWorkerForm] = useState({ name: "", role: "", phone: "", salary: "", startDate: "" });
 
   const [editingLand, setEditingLand] = useState<Land | null>(null);
   const [editingEq, setEditingEq] = useState<Equipment | null>(null);
   const [editingWorker, setEditingWorker] = useState<Worker | null>(null);
+  const [isDrawingMap, setIsDrawingMap] = useState(false);
 
   useEffect(() => { loadAll(); }, [userId]);
 
@@ -68,12 +71,23 @@ export default function ResourcesManagement({ userId }: { userId: string }) {
   };
 
   const onLandSubmit = async (e: any) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     try {
-      if (editingLand) await api.farmer.updateLand(editingLand._id, { ...landForm, area: Number(landForm.area) });
-      else await api.farmer.addLand({ ...landForm, area: Number(landForm.area) });
-      toast.success("تم الحفظ"); loadAll(); setLandDialogOpen(false);
+      const payload = { ...landForm, area: Number(landForm.area) };
+      if (editingLand) await api.farmer.updateLand(editingLand._id, payload);
+      else await api.farmer.addLand(payload);
+      toast.success("تم الحفظ");
+      loadAll();
+      setLandDialogOpen(false);
+      setIsDrawingMap(false);
     } catch (err) { toast.error("فشل الحفظ"); }
+  };
+
+  const onMapSave = (coordinates: { lat: number, lng: number }[], areaHectares: number) => {
+    setLandForm({ ...landForm, area: areaHectares.toString(), coordinates });
+    // We don't submit yet, just update the form and close map view
+    setIsDrawingMap(false);
+    toast.info(`تم تحديد المساحة: ${areaHectares} هكتار`);
   };
 
   const onEqSubmit = async (e: any) => {
@@ -120,15 +134,31 @@ export default function ResourcesManagement({ userId }: { userId: string }) {
         </TabsList>
 
         <TabsContent value="lands" className="space-y-4">
-          <Button onClick={() => { setEditingLand(null); setLandForm({ name: "", area: "", location: "", soilType: "طينية", status: "متاح" }); setLandDialogOpen(true); }}>إضافة أرض</Button>
+          <Button onClick={() => { setEditingLand(null); setLandForm({ name: "", area: "", location: "", soilType: "طينية", status: "متاح", coordinates: [] }); setLandDialogOpen(true); }}>إضافة أرض</Button>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {lands.map(l => (
               <Card key={l._id}>
-                <CardHeader className="pb-2 flex flex-row justify-between items-start"><CardTitle>{l.name}</CardTitle></CardHeader>
+                <CardHeader className="pb-2 flex flex-row justify-between items-start">
+                  <div className="flex items-center gap-2">
+                    <CardTitle>{l.name}</CardTitle>
+                    {l.coordinates && l.coordinates.length > 0 && <MapIcon className="w-4 h-4 text-green-500" />}
+                  </div>
+                </CardHeader>
                 <CardContent>
                   <p className="text-sm text-gray-600">{l.area} هكتار - {l.location}</p>
                   <div className="flex gap-2 mt-4">
-                    <Button variant="outline" size="sm" onClick={() => { setEditingLand(l); setLandForm({ name: l.name, area: l.area.toString(), location: l.location, soilType: l.soilType, status: l.status }); setLandDialogOpen(true); }}><Edit className="w-4 h-4" /></Button>
+                    <Button variant="outline" size="sm" onClick={() => {
+                      setEditingLand(l);
+                      setLandForm({
+                        name: l.name,
+                        area: l.area.toString(),
+                        location: l.location,
+                        soilType: l.soilType,
+                        status: l.status,
+                        coordinates: l.coordinates || []
+                      });
+                      setLandDialogOpen(true);
+                    }}><Edit className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => deleteResource("land", l._id)} className="text-red-500"><Trash2 className="w-4 h-4" /></Button>
                   </div>
                 </CardContent>
@@ -177,15 +207,68 @@ export default function ResourcesManagement({ userId }: { userId: string }) {
       </Tabs>
 
       {/* Dialogs for Land, Eq, Worker */}
-      <Dialog open={landDialogOpen} onOpenChange={setLandDialogOpen}>
-        <DialogContent dir="rtl">
-          <DialogHeader><DialogTitle>{editingLand ? "تعديل الأرض" : "إضافة أرض"}</DialogTitle></DialogHeader>
-          <form onSubmit={onLandSubmit} className="space-y-4">
-            <Input placeholder="اسم الأرض" value={landForm.name} onChange={e => setLandForm({ ...landForm, name: e.target.value })} required />
-            <Input placeholder="المساحة" type="number" value={landForm.area} onChange={e => setLandForm({ ...landForm, area: e.target.value })} required />
-            <Input placeholder="الموقع" value={landForm.location} onChange={e => setLandForm({ ...landForm, location: e.target.value })} required />
-            <Button type="submit" className="w-full bg-green-600">حفظ</Button>
-          </form>
+      <Dialog open={landDialogOpen} onOpenChange={(open) => { setLandDialogOpen(open); if (!open) setIsDrawingMap(false); }}>
+        <DialogContent dir="rtl" className={isDrawingMap ? "max-w-5xl" : "max-w-md"}>
+          <DialogHeader>
+            <DialogTitle>{editingLand ? "تعديل معلومات الأرض" : "إضافة أرض زراعية جديدة"}</DialogTitle>
+          </DialogHeader>
+
+          {isDrawingMap ? (
+            <div className="mt-4">
+              <LeafletLandDrawing
+                initialCoordinates={landForm.coordinates}
+                onSave={onMapSave}
+                onCancel={() => setIsDrawingMap(false)}
+              />
+            </div>
+          ) : (
+            <form onSubmit={onLandSubmit} className="space-y-4">
+              <div className="grid gap-2">
+                <Label>اسم القطعة الأرضية</Label>
+                <Input placeholder="مثال: قطعتي الشمالية" value={landForm.name} onChange={e => setLandForm({ ...landForm, name: e.target.value })} required />
+              </div>
+
+              <div className="grid gap-2">
+                <Label>تحديد الحدود المساحية</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full flex gap-2 border-green-500 text-green-700"
+                  onClick={() => setIsDrawingMap(true)}
+                >
+                  <MapPin className="w-4 h-4" />
+                  {landForm.coordinates.length > 0 ? "تعديل الرسم على الخريطة" : "رسم حدود الأرض على الخريطة"}
+                </Button>
+                {landForm.coordinates.length > 0 && (
+                  <p className="text-xs text-green-600">✓ تم رسم الحدود وتحديد المساحة أوتوماتيكياً</p>
+                )}
+              </div>
+
+              <div className="grid gap-2">
+                <Label>المساحة (هكتار)</Label>
+                <Input placeholder="المساحة" type="number" step="0.01" value={landForm.area} onChange={e => setLandForm({ ...landForm, area: e.target.value })} required />
+              </div>
+
+              <div className="grid gap-2">
+                <Label>الموقع (البلدية/الولاية)</Label>
+                <Input placeholder="الموقع" value={landForm.location} onChange={e => setLandForm({ ...landForm, location: e.target.value })} required />
+              </div>
+
+              <div className="grid gap-2">
+                <Label>نوع التربة</Label>
+                <Select value={landForm.soilType} onValueChange={v => setLandForm({ ...landForm, soilType: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="طينية">طينية</SelectItem>
+                    <SelectItem value="رملية">رملية</SelectItem>
+                    <SelectItem value="غرينية">غرينية</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">حفظ كافة البيانات</Button>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
 

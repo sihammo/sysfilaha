@@ -7,6 +7,10 @@ const LandSchema = new mongoose.Schema({
     location: { type: String },
     soilType: { type: String },
     status: { type: String },
+    coordinates: [{
+        lat: Number,
+        lng: Number
+    }]
 });
 
 module.exports = mongoose.model('Land', LandSchema);

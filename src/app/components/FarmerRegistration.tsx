@@ -6,7 +6,7 @@ import { Label } from "./ui/label";
 import { Sprout, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "./ui/textarea";
-import AlgeriaMap from "./AlgeriaMap";
+import LeafletLocationPicker from "./LeafletLocationPicker";
 
 interface FarmerRegistrationProps {
   onRegister: (farmer: any) => void;
@@ -190,9 +190,9 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
               </h3>
 
               <div>
-                <AlgeriaMap
+                <LeafletLocationPicker
                   selectedRegion={selectedRegion}
-                  onRegionSelect={setSelectedRegion}
+                  onLocationSelect={(region) => setSelectedRegion(region)}
                 />
               </div>
 
