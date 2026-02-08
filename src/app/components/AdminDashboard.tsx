@@ -152,30 +152,30 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
             </Button>
           </div>
 
-          <div className="hidden md:flex items-center gap-6">
-            <div className="flex items-center gap-4 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
+          <div className="hidden sm:flex items-center gap-6">
+            <div className="flex items-center gap-2 md:gap-4 px-3 md:px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
               <div className="flex items-center gap-2">
                 <div className="relative">
-                  <Activity className={cn("w-4 h-4", stats.systemStatus === 'connecting' ? 'text-amber-500' : 'text-emerald-500')} />
+                  <Activity className={cn("w-3 h-3 md:w-4 md:h-4", stats.systemStatus === 'connecting' ? 'text-amber-500' : 'text-emerald-500')} />
                   {stats.systemStatus === 'connected' && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-ping opacity-75" />
+                    <span className="absolute -top-1 -right-1 w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-500 rounded-full animate-ping opacity-75" />
                   )}
                 </div>
-                <span className={cn("text-xs font-bold", stats.systemStatus === 'connecting' ? 'text-amber-500' : 'text-emerald-500')}>
-                  {stats.systemStatus === 'connecting' ? 'جاري الاتصال...' : 'النظام متصل'}
+                <span className={cn("text-[10px] md:text-xs font-bold", stats.systemStatus === 'connecting' ? 'text-amber-500' : 'text-emerald-500')}>
+                  {stats.systemStatus === 'connecting' ? 'اتصال...' : 'متصل'}
                 </span>
               </div>
               <div className="w-px h-4 bg-slate-200" />
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-blue-500" />
+                <Users className="w-3 h-3 md:w-4 md:h-4 text-blue-500" />
                 <AnimatePresence mode="wait">
                   <motion.span
                     key={stats.totalFarmers}
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-xs font-bold text-slate-600 block tabular-nums"
+                    className="text-[10px] md:text-xs font-bold text-slate-600 block tabular-nums"
                   >
-                    {stats.totalFarmers} فلاح مسجل
+                    {stats.totalFarmers} فلاح
                   </motion.span>
                 </AnimatePresence>
               </div>

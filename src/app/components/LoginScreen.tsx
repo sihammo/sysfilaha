@@ -69,16 +69,17 @@ export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenPro
         className="flex flex-col justify-center px-8 lg:px-24 py-12 z-10 bg-white"
       >
         <div className="max-w-md w-full mx-auto space-y-10">
-          <header className="space-y-3">
+          <header className="space-y-4 md:space-y-3 text-right">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2 }}
+              className="flex justify-end"
             >
-              <BrandingLogo className="mb-4" isBilingual />
+              <BrandingLogo className="mb-2 md:mb-4" isBilingual />
             </motion.div>
-            <h1 className="text-4xl font-extrabold text-foreground tracking-tight leading-tight">إدارة ذكية للزراعة الجزائرية</h1>
-            <p className="text-muted-foreground text-lg">مرحباً بك في المنصة المتكاملة لربط الفلاحين رقمياً.</p>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight leading-tight">إدارة ذكية للزراعة الجزائرية</h1>
+            <p className="text-muted-foreground text-base md:text-lg">مرحباً بك في المنصة المتكاملة لربط الفلاحين رقمياً.</p>
           </header>
 
           <form onSubmit={handleSubmit} className="space-y-6">

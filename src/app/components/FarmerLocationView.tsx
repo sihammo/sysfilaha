@@ -85,17 +85,17 @@ export default function FarmerLocationView({ region, landArea, address, coordina
     : [];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MapPin className="w-5 h-5 text-green-600" />
+    <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-xl shadow-slate-200/50 overflow-hidden text-right">
+      <CardHeader className="p-6 md:p-8">
+        <CardTitle className="flex items-center justify-end gap-2 text-lg md:text-xl">
           موقع أراضيك على خريطة الجزائر
+          <MapPin className="w-5 h-5 text-green-600" />
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
+      <CardContent className="p-4 md:p-8 pt-0">
+        <div className="space-y-4 md:space-y-6">
           {/* Map */}
-          <div className="border-2 border-slate-100 rounded-3xl overflow-hidden shadow-inner bg-slate-50 aspect-video relative z-10">
+          <div className="border-2 border-slate-100 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-inner bg-slate-50 aspect-[4/3] md:aspect-video relative z-10">
             {hasCoordinates ? (
               <MapContainer
                 center={center}
@@ -160,27 +160,27 @@ export default function FarmerLocationView({ region, landArea, address, coordina
           </div>
 
           {/* Details */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-green-50 p-4 rounded-lg border-l-4 border-l-green-600">
-              <p className="text-sm font-semibold text-gray-600">المنطقة</p>
-              <p className="text-lg font-bold text-green-600 mt-2">{region}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 text-right">
+            <div className="bg-green-50/50 p-4 rounded-2xl border-r-4 border-r-green-600 transition-colors hover:bg-green-50">
+              <p className="text-[10px] md:text-sm font-semibold text-gray-500 uppercase tracking-widest">المنطقة</p>
+              <p className="text-base md:text-lg font-bold text-green-700 mt-1 md:mt-2">{region}</p>
             </div>
 
-            <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-l-blue-600">
-              <p className="text-sm font-semibold text-gray-600">مساحة الأرض</p>
-              <p className="text-lg font-bold text-blue-600 mt-2">{landArea} هكتار</p>
+            <div className="bg-blue-50/50 p-4 rounded-2xl border-r-4 border-r-blue-600 transition-colors hover:bg-blue-50">
+              <p className="text-[10px] md:text-sm font-semibold text-gray-500 uppercase tracking-widest">مساحة الأرض</p>
+              <p className="text-base md:text-lg font-bold text-blue-700 mt-1 md:mt-2">{landArea} هكتار</p>
             </div>
 
-            <div className="bg-amber-50 p-4 rounded-lg border-l-4 border-l-amber-600">
-              <p className="text-sm font-semibold text-gray-600">العنوان</p>
-              <p className="text-sm font-semibold text-amber-600 mt-2 truncate">{address || "لم يتم تحديد"}</p>
+            <div className="bg-amber-50/50 p-4 rounded-2xl border-r-4 border-r-amber-600 transition-colors hover:bg-amber-50">
+              <p className="text-[10px] md:text-sm font-semibold text-gray-500 uppercase tracking-widest">العنوان</p>
+              <p className="text-base md:text-lg font-bold text-amber-700 mt-1 md:mt-2 truncate">{address || "لم يتم تحديد"}</p>
             </div>
           </div>
 
           {/* Info Message */}
-          <div className="bg-green-100 border border-green-300 p-4 rounded-lg">
-            <p className="text-sm text-green-800">
-              <span className="font-semibold">📍 ملاحظة:</span> موقعك محفوظ وآمن. يستخدمه الإدارة فقط للتفتيش والدعم اللوجستي.
+          <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl flex items-start gap-3 justify-end">
+            <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
+              <span className="font-bold text-primary">📍 ملاحظة:</span> موقعك محفوظ وآمن. يستخدمه الإدارة فقط للتفتيش والدعم اللوجستي لضمان وصول المساعدات.
             </p>
           </div>
         </div>
