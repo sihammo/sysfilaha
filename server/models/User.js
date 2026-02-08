@@ -14,6 +14,8 @@ const UserSchema = new mongoose.Schema({
     landArea: { type: String },
     region: { type: String },
     crops: { type: String },
+    lat: { type: Number },
+    lng: { type: Number },
     status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
     registrationDate: { type: Date, default: Date.now },
 });

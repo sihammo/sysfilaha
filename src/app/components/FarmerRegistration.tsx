@@ -25,6 +25,8 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
     address: "",
     landArea: "",
     crops: "",
+    lat: null as number | null,
+    lng: null as number | null,
   });
 
   const [selectedRegion, setSelectedRegion] = useState("");
@@ -192,18 +194,21 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
               <div>
                 <LeafletLocationPicker
                   selectedRegion={selectedRegion}
-                  onLocationSelect={(region) => setSelectedRegion(region)}
+                  onLocationSelect={(region, lat, lng) => {
+                    setSelectedRegion(region);
+                    setFormData(prev => ({ ...prev, address: region, lat, lng }));
+                  }}
                 />
               </div>
 
               <div>
-                <Label htmlFor="address">العنوان (المدينة / البلدية)</Label>
+                <Label htmlFor="address">العنوان (تم تحديده من الخريطة)</Label>
                 <Input
                   id="address"
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
-                  placeholder="اسم المدينة أو البلدية"
+                  placeholder="سيظهر العنوان هنا عند النقر على الخريطة"
                   required
                 />
               </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, LayersControl } from "react-leaflet";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { MapPin, Leaf, Users } from "lucide-react";
 import api from "../utils/api";
@@ -25,6 +25,8 @@ interface FarmerLocation {
     region: string;
     landArea: string;
     phone: string;
+    lat?: number;
+    lng?: number;
 }
 
 export default function LeafletAdminFarmersMap() {
@@ -109,12 +111,24 @@ export default function LeafletAdminFarmersMap() {
                                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                             />
+                            <LayersControl position="topright">
+                                <LayersControl.BaseLayer checked name="خريطة الشوارع">
+                                    <TileLayer
+                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                    />
+                                </LayersControl.BaseLayer>
+                                <LayersControl.BaseLayer name="خريطة القمر الصناعي">
+                                    <TileLayer
+                                        attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EBP, and the GIS User Community'
+                                        url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                                    />
+                                </LayersControl.BaseLayer>
+                            </LayersControl>
                             {farmers.map((farmer) => (
                                 <Marker
                                     key={farmer._id}
-                                    // Fallback to random variation if coords missing, but here we just use region based mocks if needed
-                                    // or just skip if no real coords. For now we center on Algeria cities.
-                                    position={[36.7538 + (Math.random() - 0.5) * 5, 3.0588 + (Math.random() - 0.5) * 5]}
+                                    position={farmer.lat && farmer.lng ? [farmer.lat, farmer.lng] : [36.7538 + (Math.random() - 0.5), 3.0588 + (Math.random() - 0.5)]}
                                     icon={DefaultIcon}
                                 >
                                     <Popup>
