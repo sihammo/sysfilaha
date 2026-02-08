@@ -60,11 +60,29 @@ export default function LeafletAdminFarmersMap() {
             setIsLoading(true);
             const data = await api.admin.getFullData();
 
+            // --- DEBUG START ---
+            console.group("📍 Admin Map Data Debug");
+            console.log("Raw Response:", data);
+            console.log("Total Farmers:", data.farmers?.length);
+            console.log("Total Lands:", data.lands?.length);
+
+            // Check sample land
+            if (data.lands?.length > 0) {
+                console.log("Sample First Land:", data.lands[0]);
+                console.log("Land Coordinates Type:", typeof data.lands[0].coordinates);
+                console.log("Land User Field:", data.lands[0].user);
+            } else {
+                console.warn("⚠️ No lands found in response!");
+            }
+            console.groupEnd();
+            // --- DEBUG END ---
+
             console.log('📍 Full data received:', data);
 
             // 1. Get approved farmers
             const approvedFarmers = data.farmers.filter((f: any) => f.status === 'approved');
-            const approvedFarmerIds = new Set(approvedFarmers.map((f: any) => f._id));
+            // FIX: Convert IDs to string for reliable comparison
+            const approvedFarmerIds = new Set(approvedFarmers.map((f: any) => String(f._id)));
 
             console.log('✅ Approved farmers:', approvedFarmers.length);
             console.log('📋 All lands:', data.lands.length);
@@ -72,14 +90,20 @@ export default function LeafletAdminFarmersMap() {
             // 2. Filter lands (Polygons) - only for approved farmers with valid coordinates
             const validLands = data.lands.filter((l: any) => {
                 // Handle both populated and unpopulated user field
-                const userId = typeof l.user === 'object' ? l.user?._id : l.user;
+                // FIX: Convert ID to string for lookup
+                const rawUserId = typeof l.user === 'object' ? l.user?._id : l.user;
+                const userId = String(rawUserId);
+                const userObj = typeof l.user === 'object' ? l.user : null;
                 const hasValidCoords = l.coordinates && Array.isArray(l.coordinates) && l.coordinates.length > 2;
+                const isApproved = approvedFarmerIds.has(userId);
 
                 if (!hasValidCoords) {
-                    console.log('⚠️ Land without valid coordinates:', l.name, l._id);
+                    console.warn(`⚠️ Skipped Land "${l.name}": Invalid coordinates (${l.coordinates?.length || 0})`);
+                } else if (!isApproved) {
+                    console.warn(`⚠️ Skipped Land "${l.name}": Farmer (${userId}) not approved. Status: ${userObj?.status || 'unknown'}`);
                 }
 
-                return hasValidCoords && approvedFarmerIds.has(userId);
+                return hasValidCoords && isApproved;
             });
 
             console.log('🗺️ Valid lands with polygons:', validLands.length);
@@ -89,12 +113,12 @@ export default function LeafletAdminFarmersMap() {
 
             // 3. Filter farmers with point locations (Markers) - only those WITHOUT land polygons
             const farmerIdsWithPolygons = new Set(validLands.map((l: any) =>
-                typeof l.user === 'object' ? l.user?._id : l.user
+                String(typeof l.user === 'object' ? l.user?._id : l.user)
             ));
 
             const validMarkers = approvedFarmers.filter((f: any) => {
                 const hasLocation = f.lat && f.lng;
-                const hasNoPolygon = !farmerIdsWithPolygons.has(f._id);
+                const hasNoPolygon = !farmerIdsWithPolygons.has(String(f._id));
                 return hasLocation && hasNoPolygon;
             });
 
@@ -233,7 +257,8 @@ export default function LeafletAdminFarmersMap() {
                         <div className="py-24 text-center">
                             <AlertCircle className="w-16 h-16 text-slate-200 mx-auto mb-4" />
                             <h3 className="text-xl font-black text-slate-300 mb-2">لا توجد بيانات موقع</h3>
-                            <p className="text-slate-400 font-medium">لم يقم أي فلاح معتمد بتحديد موقع أراضيه بعد</p>
+                            <p className="text-slate-400 font-medium">لم يقم أي فلاح <u>معتمد</u> بتحديد موقع أراضيه بعد.</p>
+                            <p className="text-xs text-slate-400 mt-2">تأكد من الموافقة على الفلاحين الجدد في لوحة التحكم.</p>
                         </div>
                     ) : (
                         <div className="w-full h-[700px] relative overflow-hidden">
