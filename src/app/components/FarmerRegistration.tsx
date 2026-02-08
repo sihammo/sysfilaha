@@ -232,12 +232,16 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
                             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ar`);
                             const data = await res.json();
 
-                            const city = data.address.city || data.address.town || data.address.village || data.address.county;
-                            const state = data.address.state;
-                            const fullAddress = city && state ? `${state}, ${city}` : (state || city || "الجزائر");
+                            // Robust extraction of Commune and Wilaya according to Algerian administrative divisions in OSM
+                            const commune = data.address.city || data.address.town || data.address.village || data.address.municipality || data.address.suburb;
+                            const wilaya = data.address.state || data.address.province;
+
+                            const fullAddress = wilaya && commune
+                              ? `ولاية ${wilaya}، بلدية ${commune}`
+                              : (wilaya || commune || "الجزائر");
 
                             setFormData(prev => ({ ...prev, address: fullAddress }));
-                            setSelectedRegion(state || "الجزائر");
+                            setSelectedRegion(wilaya || "الجزائر");
 
                             toast.success("تم حفظ الأرض وتحديد الموقع بنجاح", { id: "geo-fetch" });
                           } catch (error) {

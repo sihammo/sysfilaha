@@ -36,22 +36,25 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
   const [currentView, setCurrentView] = useState<View>("farmers");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [dashboardStats, setDashboardStats] = useState({
-    totalFarmers: 12402, // Base value for look & feel
+  const [stats, setStats] = useState({
+    totalArea: 0,
+    totalFarmers: 0,
+    activeFarmers: 0,
+    systemStatus: "connecting"
   });
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const data = await api.admin.getStats();
-        setDashboardStats({
-          totalFarmers: 12402 + data.totalFarmers
-        });
+        const data = await api.admin.getDashboardStats();
+        setStats(data);
       } catch (e) {
-        console.error("Failed to fetch admin stats");
+        setStats(prev => ({ ...prev, systemStatus: "disconnected" }));
       }
     };
     fetchStats();
+    const interval = setInterval(fetchStats, 60000); // Update every minute
+    return () => clearInterval(interval);
   }, []);
 
   const menuItems = [
@@ -143,12 +146,14 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
           <div className="hidden md:flex items-center gap-6">
             <div className="flex items-center gap-2 text-slate-400 text-sm">
               <Activity className="w-4 h-4" />
-              <span>حالة النظام: <span className="text-emerald-500 font-bold">متصل</span></span>
+              <span>حالة النظام: <span className={cn("font-bold", stats.systemStatus === "connected" ? "text-emerald-500" : "text-rose-500")}>
+                {stats.systemStatus === "connected" ? "متصل" : stats.systemStatus === "connecting" ? "جاري الاتصال..." : "غير متصل"}
+              </span></span>
             </div>
             <div className="h-4 w-px bg-slate-200" />
             <div className="flex items-center gap-2 text-slate-400 text-sm">
               <Users className="w-4 h-4" />
-              <span>الفلاحين النشطين: <span className="text-slate-900 font-bold">{dashboardStats.totalFarmers.toLocaleString()}</span></span>
+              <span>الفلاحين النشطين: <span className="text-slate-900 font-bold">{stats.activeFarmers.toLocaleString()}</span></span>
             </div>
           </div>
 

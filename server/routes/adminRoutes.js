@@ -11,6 +11,35 @@ const adminAuth = async (req, res, next) => {
     next();
 };
 
+// @route   GET api/admin/dashboard-stats
+// @desc    Get real-time statistics for admin dashboard
+// @access  Private/Admin
+router.get('/dashboard-stats', [auth, adminAuth], async (req, res) => {
+    try {
+        // Query 1: Total Area (Sum of all Land documents)
+        const areaResult = await Land.aggregate([
+            { $group: { _id: null, total: { $sum: "$area" } } }
+        ]);
+        const totalAreaValue = areaResult.length > 0 ? areaResult[0].total : 0;
+
+        // Query 2: Total Registered Farmers
+        const totalFarmers = await User.countDocuments({ role: 'farmer' });
+
+        // Query 3: Active Farmers (Approved)
+        const activeFarmers = await User.countDocuments({ role: 'farmer', status: 'approved' });
+
+        res.json({
+            totalArea: totalAreaValue,
+            totalFarmers: totalFarmers,
+            activeFarmers: activeFarmers,
+            systemStatus: "connected"
+        });
+    } catch (err) {
+        console.error('Dashboard stats error:', err);
+        res.status(500).send('Server Error');
+    }
+});
+
 // @route   GET api/admin/farmers
 // @desc    Get all farmers
 // @access  Private/Admin

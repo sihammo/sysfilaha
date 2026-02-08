@@ -75,6 +75,7 @@ const api = {
         updateStatus: (id: string, status: string) => api.request(`/admin/farmers/${id}/status`, 'PUT', { status }),
         updateFarmer: (id: string, data: any) => api.request(`/admin/farmers/${id}`, 'PUT', data),
         getStats: () => api.request('/admin/stats'),
+        getDashboardStats: () => api.request('/admin/dashboard-stats'),
         getFullData: () => api.request('/admin/full-data'),
         getMonthlyGrowth: () => api.request('/admin/monthly-growth'),
         getTopFarmers: () => api.request('/admin/top-farmers'),

@@ -29,11 +29,8 @@ export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenPro
       try {
         const data = await api.auth.getPublicStats();
         setPublicStats({
-          // We add the real count to the base for "look & feel" or just use real if preferred.
-          // User said "make this real", usually implying connecting to DB.
-          // I will use some logic to make it look active.
-          totalFarmers: 50000 + data.totalFarmers,
-          totalArea: 1200000 + Math.round(data.totalArea)
+          totalFarmers: data.totalFarmers,
+          totalArea: data.totalArea
         });
       } catch (e) {
         console.error("Failed to fetch public stats");
