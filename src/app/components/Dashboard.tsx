@@ -19,6 +19,8 @@ export default function Dashboard({ userId, userRegion, userLandArea, userAddres
     totalSales: 0,
     totalResources: 0,
     monthlyRevenue: 0,
+    cropData: [] as { name: string, value: number }[],
+    salesData: [] as { month: string, مبيعات: number }[]
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -38,23 +40,7 @@ export default function Dashboard({ userId, userRegion, userLandArea, userAddres
     }
   };
 
-  const cropData = [
-    { name: "قمح", value: 35 },
-    { name: "شعير", value: 25 },
-    { name: "خضروات", value: 20 },
-    { name: "فواكه", value: 20 },
-  ];
-
-  const salesData = [
-    { month: "يناير", مبيعات: 45000 },
-    { month: "فبراير", مبيعات: 52000 },
-    { month: "مارس", مبيعات: 48000 },
-    { month: "أبريل", مبيعات: 61000 },
-    { month: "مايو", مبيعات: 55000 },
-    { month: "يونيو", مبيعات: 67000 },
-  ];
-
-  const COLORS = ["#16a34a", "#84cc16", "#eab308", "#f97316"];
+  const COLORS = ["#16a34a", "#84cc16", "#eab308", "#f97316", "#ef4444", "#8b5cf6"];
 
   if (isLoading) {
     return <div className="p-8 text-center text-gray-500">جاري التحميل...</div>;
@@ -121,7 +107,7 @@ export default function Dashboard({ userId, userRegion, userLandArea, userAddres
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={salesData}>
+              <LineChart data={stats.salesData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
@@ -140,16 +126,16 @@ export default function Dashboard({ userId, userRegion, userLandArea, userAddres
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={cropData}
+                  data={stats.cropData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={(entry) => entry.name}
+                  label={(entry: any) => entry.name}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {cropData.map((entry, index) => (
+                  {stats.cropData.map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>

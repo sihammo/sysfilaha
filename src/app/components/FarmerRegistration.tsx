@@ -202,13 +202,14 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
               </div>
 
               <div>
-                <Label htmlFor="address">العنوان (تم تحديده من الخريطة)</Label>
+                <Label htmlFor="address">المدينة / البلدية (تُحدد آلياً من الخريطة)</Label>
                 <Input
                   id="address"
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
-                  placeholder="سيظهر العنوان هنا عند النقر على الخريطة"
+                  placeholder="انقر على الخريطة أعلاه لتحديد المدينة"
+                  className={formData.address ? "bg-green-50 border-green-200" : ""}
                   required
                 />
               </div>

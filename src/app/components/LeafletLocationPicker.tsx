@@ -51,7 +51,7 @@ export default function LeafletLocationPicker({ onLocationSelect, selectedRegion
 
             const city = data.address.city || data.address.town || data.address.village;
             const state = data.address.state;
-            const name = state || city || "الجزائر";
+            const name = city && state ? `${city}, ${state}` : (state || city || "الجزائر");
 
             setRegionName(name);
             onLocationSelect(name, lat, lng);

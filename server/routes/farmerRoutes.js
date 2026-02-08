@@ -8,9 +8,6 @@ const Equipment = require('../models/Equipment');
 const Livestock = require('../models/Livestock');
 const Worker = require('../models/Worker');
 
-// @route   GET api/farmer/stats
-// @desc    Get farmer statistics
-// @access  Private
 router.get('/stats', auth, async (req, res) => {
     try {
         const cropsCount = await Crop.countDocuments({ user: req.user.id });
@@ -21,11 +18,35 @@ router.get('/stats', auth, async (req, res) => {
 
         const totalRevenue = sales.reduce((sum, sale) => sum + (sale.totalPrice || 0), 0);
 
+        // Calculate real crop distribution
+        const allCrops = await Crop.find({ user: req.user.id });
+        const cropDistrib = {};
+        allCrops.forEach(c => {
+            cropDistrib[c.name] = (cropDistrib[c.name] || 0) + 1;
+        });
+        const cropData = Object.keys(cropDistrib).map(name => ({ name, value: cropDistrib[name] }));
+
+        // Calculate real monthly sales (last 6 months)
+        const salesData = [];
+        const months = ["جانفي", "فيفري", "مارس", "أفريل", "ماي", "جوان", "جويلية", "أوت", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date();
+            d.setMonth(d.getMonth() - i);
+            const monthName = months[d.getMonth()];
+            const monthlySales = sales.filter(s => {
+                const sDate = new Date(s.date);
+                return sDate.getMonth() === d.getMonth() && sDate.getFullYear() === d.getFullYear();
+            }).reduce((sum, s) => sum + (s.totalPrice || 0), 0);
+            salesData.push({ month: monthName, مبيعات: monthlySales });
+        }
+
         res.json({
             totalCrops: cropsCount,
             totalSales: sales.length,
             totalResources: landsCount + equipmentCount + livestockCount,
             monthlyRevenue: totalRevenue,
+            cropData: cropData.length > 0 ? cropData : [{ name: "لا يوجد", value: 1 }],
+            salesData
         });
     } catch (err) {
         console.error(err.message);
