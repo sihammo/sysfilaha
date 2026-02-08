@@ -21,8 +21,8 @@ export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenPro
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [publicStats, setPublicStats] = useState({
-    totalFarmers: 50000,
-    totalArea: 1200000
+    totalFarmers: 2,
+    totalArea: 1000
   });
 
   useEffect(() => {
@@ -142,7 +142,7 @@ export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenPro
 
       {/* Right Side: Visual & Stats */}
       <div className="hidden lg:flex relative flex-col justify-between p-16 overflow-hidden bg-primary">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center mix-blend-overlay opacity-20" />
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center mix-blend-overlay opacity-30" />
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-primary/80" />
 
         <div className="relative z-10">
@@ -161,7 +161,7 @@ export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenPro
           <div className="space-y-2">
             <p className="text-primary-foreground/60 font-bold uppercase tracking-wider text-xs">إحصائيات المنصة</p>
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-black tabular-nums">+{publicStats.totalFarmers.toLocaleString()}</span>
+              <span className="text-5xl font-black tabular-nums">{publicStats.totalFarmers.toLocaleString()}+</span>
             </div>
             <p className="text-lg font-medium opacity-80">فلاح مسجل عبر القطر الوطني</p>
           </div>
