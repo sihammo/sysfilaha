@@ -739,4 +739,90 @@ router.get('/ai-consultation', auth, async (req, res) => {
     }
 });
 
+// @route   GET api/farmer/export-land-kml/:landId
+// @desc    Export a specific land to KML format
+// @access  Private
+router.get('/export-land-kml/:landId', auth, async (req, res) => {
+    try {
+        const { landToKML } = require('../utils/kmlConverter');
+
+        const land = await Land.findOne({
+            _id: req.params.landId,
+            user: req.user.id
+        });
+
+        if (!land) {
+            return res.status(404).json({ msg: 'الأرض غير موجودة' });
+        }
+
+        if (!land.coordinates || land.coordinates.length < 3) {
+            return res.status(400).json({ msg: 'الأرض لا تحتوي على إحداثيات صالحة' });
+        }
+
+        // Add user info for KML
+        const farmer = await User.findById(req.user.id);
+        land.user = {
+            firstName: farmer.firstName,
+            lastName: farmer.lastName,
+            phone: farmer.phone,
+            region: farmer.region
+        };
+
+        const kmlContent = landToKML(land);
+
+        res.setHeader('Content-Type', 'application/vnd.google-earth.kml+xml');
+        res.setHeader('Content-Disposition', `attachment; filename="${land.name || 'land'}_${Date.now()}.kml"`);
+        res.send(kmlContent);
+
+    } catch (error) {
+        console.error('KML Export Error:', error);
+        res.status(500).json({ msg: 'فشل تصدير ملف KML' });
+    }
+});
+
+// @route   POST api/farmer/import-land-kml
+// @desc    Import land boundaries from KML file
+// @access  Private
+router.post('/import-land-kml', auth, async (req, res) => {
+    try {
+        const { parseKMLToLands } = require('../utils/kmlConverter');
+        const { kmlContent } = req.body;
+
+        if (!kmlContent) {
+            return res.status(400).json({ msg: 'محتوى KML مطلوب' });
+        }
+
+        const parsedLands = parseKMLToLands(kmlContent);
+
+        if (parsedLands.length === 0) {
+            return res.status(400).json({ msg: 'لم يتم العثور على إحداثيات صالحة في ملف KML' });
+        }
+
+        // Create new land documents for the farmer
+        const savedLands = [];
+        for (const landData of parsedLands) {
+            const newLand = new Land({
+                user: req.user.id,
+                name: landData.name,
+                coordinates: landData.coordinates,
+                area: landData.area,
+                location: 'مستورد من KML'
+            });
+
+            const saved = await newLand.save();
+            savedLands.push(saved);
+        }
+
+        res.json({
+            msg: `تم استيراد ${savedLands.length} قطعة أرض بنجاح`,
+            lands: savedLands
+        });
+
+    } catch (error) {
+        console.error('KML Import Error:', error);
+        res.status(500).json({ msg: error.message || 'فشل استيراد ملف KML' });
+    }
+});
+
 module.exports = router;
+

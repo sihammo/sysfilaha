@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useSpring, useTransform } from "framer-motion";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -12,6 +12,19 @@ interface LoginScreenProps {
   onLogin: (user: any, token: string) => void;
   onRegisterClick: () => void;
 }
+
+const Counter = ({ value }: { value: number }) => {
+  const spring = useSpring(value, { mass: 0.8, stiffness: 75, damping: 15 });
+  const display = useTransform(spring, (current) => Math.round(current).toLocaleString());
+
+  useEffect(() => {
+    spring.set(value);
+  }, [spring, value]);
+
+  return <motion.span className="text-5xl font-black tabular-nums">{display}</motion.span>;
+};
+
+const FARMER_GOAL = 10000; // Target number of farmers
 
 export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenProps) {
   const [formData, setFormData] = useState({
@@ -38,7 +51,7 @@ export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenPro
       }
     };
     fetchStats();
-    const interval = setInterval(fetchStats, 10000); // Live update every 10 seconds
+    const interval = setInterval(fetchStats, 2000); // Live update every 2 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -161,34 +174,16 @@ export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenPro
 
         <div className="relative z-10 grid grid-cols-2 gap-8 text-white">
           <div className="space-y-2">
-            <p className="text-primary-foreground/60 font-bold uppercase tracking-wider text-xs">إحصائيات المنصة</p>
+            <p className="text-[10px] md:text-xs font-bold text-slate-600 block tabular-nums">الأماكن المتبقية</p>
             <div className="flex items-baseline gap-2">
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={publicStats.totalFarmers}
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-5xl font-black tabular-nums"
-                >
-                  {publicStats.totalFarmers.toLocaleString()}
-                </motion.span>
-              </AnimatePresence>
+              <Counter value={Math.max(0, FARMER_GOAL - publicStats.totalFarmers)} />
             </div>
-            <p className="text-lg font-medium opacity-80">فلاح مسجل عبر القطر الوطني</p>
+            <p className="text-lg font-medium opacity-80">من {FARMER_GOAL.toLocaleString()} مكان متاح</p>
           </div>
           <div className="space-y-2">
-            <p className="text-primary-foreground/60 font-bold uppercase tracking-wider text-xs">المساحات المسجلة</p>
+            <p className="text-[10px] md:text-xs font-bold text-slate-600 block tabular-nums">المساحات المسجلة</p>
             <div className="flex items-baseline gap-2">
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={publicStats.totalArea}
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-5xl font-black tabular-nums"
-                >
-                  {publicStats.totalArea.toLocaleString()}
-                </motion.span>
-              </AnimatePresence>
+              <Counter value={publicStats.totalArea} />
               <span className="text-xl font-bold opacity-60">هكتار</span>
             </div>
             <p className="text-lg font-medium opacity-80">تمت رقمنتها بالكامل</p>

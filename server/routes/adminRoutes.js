@@ -539,4 +539,40 @@ router.post('/ai-analysis', [auth, adminAuth], async (req, res) => {
     }
 });
 
+// @route   GET api/admin/export-kml
+// @desc    Export all farmlands to KML format
+// @access  Private/Admin
+router.get('/export-kml', [auth, adminAuth], async (req, res) => {
+    try {
+        const { landsToKML } = require('../utils/kmlConverter');
+
+        // Get all lands with populated user data for approved farmers only
+        const farmers = await User.find({ role: 'farmer', status: 'approved' });
+        const approvedFarmerIds = farmers.map(f => f._id);
+
+        const lands = await Land.find({ user: { $in: approvedFarmerIds } })
+            .populate('user', 'firstName lastName phone region');
+
+        // Filter lands with valid coordinates
+        const validLands = lands.filter(l =>
+            l.coordinates && Array.isArray(l.coordinates) && l.coordinates.length >= 3
+        );
+
+        if (validLands.length === 0) {
+            return res.status(404).json({ msg: 'لا توجد أراضي مسجلة للتصدير' });
+        }
+
+        const kmlContent = landsToKML(validLands);
+
+        // Set headers for file download
+        res.setHeader('Content-Type', 'application/vnd.google-earth.kml+xml');
+        res.setHeader('Content-Disposition', `attachment; filename="farmlands_${Date.now()}.kml"`);
+        res.send(kmlContent);
+
+    } catch (error) {
+        console.error('KML Export Error:', error);
+        res.status(500).json({ msg: 'فشل تصدير ملف KML' });
+    }
+});
+
 module.exports = router;

@@ -85,7 +85,40 @@ const api = {
         getTopFarmers: () => api.request('/admin/top-farmers'),
         deleteFarmer: (id: string) => api.request(`/admin/farmers/${id}`, 'DELETE'),
         runAiAnalysis: () => api.request('/admin/ai-analysis', 'POST'),
+        exportKML: async () => {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_URL}/admin/export-kml`, {
+                headers: { 'x-auth-token': token || '' }
+            });
+            if (!response.ok) throw new Error('فشل تصدير KML');
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `farmlands_${Date.now()}.kml`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        },
+    },
+
+    kml: {
+        exportLand: async (landId: string) => {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_URL}/farmer/export-land-kml/${landId}`, {
+                headers: { 'x-auth-token': token || '' }
+            });
+            if (!response.ok) throw new Error('فشل تصدير KML');
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `land_${landId}_${Date.now()}.kml`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        },
+        importLand: (kmlContent: string) => api.request('/farmer/import-land-kml', 'POST', { kmlContent }),
     }
+
 };
 
 export default api;

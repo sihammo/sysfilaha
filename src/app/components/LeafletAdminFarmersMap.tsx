@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Polygon, Popup, LayersControl, Marker, Circle } from "react-leaflet";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { MapPin, Leaf, Users, Navigation, Phone, AlertCircle } from "lucide-react";
+import { Button } from "./ui/button";
+import { MapPin, Leaf, Users, Navigation, Phone, AlertCircle, Download } from "lucide-react";
 import api from "../utils/api";
 import { toast } from "sonner";
 import L from "leaflet";
@@ -141,6 +142,16 @@ export default function LeafletAdminFarmersMap() {
             toast.error("فشل تحميل بيانات الخريطة: " + (e.message || 'خطأ غير معروف'));
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleExportKML = async () => {
+        try {
+            toast.loading('جاري تصدير ملف KML...');
+            await api.admin.exportKML();
+            toast.success('تم تصدير ملف KML بنجاح');
+        } catch (error: any) {
+            toast.error(error.message || 'فشل تصدير ملف KML');
         }
     };
 
