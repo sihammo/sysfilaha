@@ -211,21 +211,22 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
                   <div className="bg-slate-50 rounded-[2.5rem] overflow-hidden border border-slate-100 relative shadow-inner">
                     <LeafletLandDrawing
                       initialCoordinates={formData.coordinates}
-                      onSave={async (coords, area) => {
+                      onSave={async (coords, area, representativePoint) => {
+                        const point = representativePoint || coords[0];
                         // Optimistically set coordinates and area immediately
                         setFormData(prev => ({
                           ...prev,
                           coordinates: coords,
                           landArea: area.toString(),
-                          lat: coords[0]?.lat,
-                          lng: coords[0]?.lng
+                          lat: point?.lat,
+                          lng: point?.lng
                         }));
 
                         // Fetch location details (Reverse Geocoding)
-                        if (coords.length > 0) {
+                        if (point) {
                           try {
-                            const lat = coords[0].lat;
-                            const lng = coords[0].lng;
+                            const lat = point.lat;
+                            const lng = point.lng;
                             toast.loading("جاري تحديد الموقع...", { id: "geo-fetch" });
 
                             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ar`);
