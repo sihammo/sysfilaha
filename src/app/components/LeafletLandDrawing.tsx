@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, useMap, LayersControl, LayerGroup } from "react-leaflet";
 import { Button } from "./ui/button";
-import { Trash2, Save, Map as MapIcon, Crosshair, MapPin, Search } from "lucide-react";
+import { Trash2, Save, Map as MapIcon, Crosshair, MapPin } from "lucide-react";
 import L from "leaflet";
 import "@geoman-io/leaflet-geoman-free";
 import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
@@ -32,72 +32,7 @@ interface LeafletLandDrawingProps {
     onCancel: () => void;
 }
 
-// Search Bar Component
-function SearchControl({ onLocationSelect }: { onLocationSelect: (lat: number, lng: number) => void }) {
-    const [query, setQuery] = useState("");
-    const [results, setResults] = useState<any[]>([]);
-    const [searching, setSearching] = useState(false);
-    const map = useMap();
 
-    const handleSearch = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!query.trim()) return;
-        setSearching(true);
-        try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&countrycodes=dz&limit=5&accept-language=ar`);
-            const data = await res.json();
-            setResults(data);
-        } catch (err) {
-            console.error("Search error", err);
-        } finally {
-            setSearching(false);
-        }
-    };
-
-    const selectResult = (res: any) => {
-        const lat = parseFloat(res.lat);
-        const lon = parseFloat(res.lon);
-        map.setView([lat, lon], 14);
-        onLocationSelect(lat, lon);
-        setResults([]);
-        setQuery(res.display_name);
-    };
-
-    return (
-        <div className="leaflet-top leaflet-right" style={{ marginTop: "10px", marginRight: "10px" }}>
-            <div className="leaflet-control w-72 md:w-80 group">
-                <form onSubmit={handleSearch} className="relative">
-                    <input
-                        type="text"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder="ابحث عن الولاية، البلدية أو المنطقة..."
-                        className="w-full py-3 px-4 pr-12 rounded-2xl border-none shadow-xl focus:ring-4 focus:ring-green-500/20 font-arabic text-sm outline-none bg-white/95 backdrop-blur-md"
-                    />
-                    <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-green-600 hover:bg-green-50 rounded-xl transition-colors">
-                        {searching ? <Crosshair className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
-                    </button>
-
-                    {results.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-green-50 z-[1000] animate-in slide-in-from-top-2">
-                            {results.map((r, i) => (
-                                <button
-                                    key={i}
-                                    type="button"
-                                    onClick={() => selectResult(r)}
-                                    className="w-full text-right px-4 py-3 text-xs hover:bg-green-50 border-b border-gray-50 last:border-none flex items-start gap-2 group transition-colors"
-                                >
-                                    <MapPin className="w-4 h-4 text-gray-400 mt-1" />
-                                    <span className="flex-1 text-gray-700 group-hover:text-green-700">{r.display_name}</span>
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </form>
-            </div>
-        </div>
-    );
-}
 
 // Locate Me Component
 function LocateControl() {
@@ -252,7 +187,7 @@ export default function LeafletLandDrawing({ initialCoordinates, onSave, onCance
                         <MapPin className="w-5 h-5" /> تحديد موقع ومساحة الأرض
                     </h3>
                     {coords.length === 0 ? (
-                        <p className="text-xs text-gray-500">استخدم البحث أو GPS لإيجاد موقعك، ثم ارسم حدود الأرض</p>
+                        <p className="text-xs text-gray-500">استخدم الخريطة لإيجاد موقعك، ثم ابدأ برسم حدود الأرض</p>
                     ) : (
                         <div className="flex items-center gap-3 mt-1">
                             <span className="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-bold shadow-sm animate-in zoom-in">
@@ -304,7 +239,6 @@ export default function LeafletLandDrawing({ initialCoordinates, onSave, onCance
                         </LayersControl.BaseLayer>
                     </LayersControl>
 
-                    <SearchControl onLocationSelect={() => { }} />
                     <LocateControl />
 
                     <GeomanControl
@@ -317,9 +251,9 @@ export default function LeafletLandDrawing({ initialCoordinates, onSave, onCance
             <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 text-xs text-amber-800 text-right font-arabic">
                 <p className="font-bold mb-1 underline">💡 طريقة الاستخدام:</p>
                 <ul className="list-disc list-inside space-y-1 opacity-80">
-                    <li>استخدم **خانة البحث** في الأعلى للذهاب إلى بلديتك أو منطقتك بسرعة.</li>
                     <li>اضغط على **أيقونة المضلع** (على اليسار) لتبدأ رسم حدود أرضك الحقيقية.</li>
-                    <li>سيتم أخذ عنوان وموقع الأرض من **وسط المساحة** التي رسمتها بدقة.</li>
+                    <li>سيتم أخذ عنوان وموقع الأرض تلقائياً من **وسط المساحة** التي رسمتها بدقة.</li>
+                    <li>يمكنك استخدام الزر على اليمين لتحديد موقعك الحالي بالـ GPS إذا كنت في الأرض الآن.</li>
                 </ul>
             </div>
         </div>
