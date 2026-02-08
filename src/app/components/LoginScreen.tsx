@@ -21,8 +21,8 @@ export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenPro
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [publicStats, setPublicStats] = useState({
-    totalFarmers: 2,
-    totalArea: 1000
+    totalFarmers: 0,
+    totalArea: 0
   });
 
   useEffect(() => {
@@ -170,7 +170,7 @@ export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenPro
                   animate={{ opacity: 1, scale: 1 }}
                   className="text-5xl font-black tabular-nums"
                 >
-                  {publicStats.totalFarmers.toLocaleString()}+
+                  {publicStats.totalFarmers.toLocaleString()}
                 </motion.span>
               </AnimatePresence>
             </div>
@@ -186,7 +186,7 @@ export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenPro
                   animate={{ opacity: 1, scale: 1 }}
                   className="text-5xl font-black tabular-nums"
                 >
-                  {Math.round(publicStats.totalArea / 1000).toLocaleString()}k
+                  {publicStats.totalArea.toLocaleString()}
                 </motion.span>
               </AnimatePresence>
               <span className="text-xl font-bold opacity-60">هكتار</span>
