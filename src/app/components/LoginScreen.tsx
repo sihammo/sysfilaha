@@ -142,8 +142,8 @@ export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenPro
 
       {/* Right Side: Visual & Stats */}
       <div className="hidden lg:flex relative flex-col justify-between p-16 overflow-hidden bg-primary">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-40 mix-blend-overlay" />
         <div className="absolute inset-0 bg-gradient-to-br from-primary/95 via-primary/80 to-primary/60" />
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center opacity-30 mix-blend-overlay" />
 
         <div className="relative z-10">
           <motion.div
