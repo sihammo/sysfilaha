@@ -1,12 +1,28 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Sprout, MapPin } from "lucide-react";
+import {
+  Sprout,
+  MapPin,
+  ChevronLeft,
+  ChevronRight,
+  User,
+  Info,
+  CheckCircle2,
+  Tractor,
+  ShieldCheck,
+  ArrowRight,
+  ChevronLeft as ChevronLeftIcon,
+  Map,
+  ClipboardList
+} from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "./ui/textarea";
 import LeafletLocationPicker from "./LeafletLocationPicker";
+import { cn } from "../utils/cn";
 
 interface FarmerRegistrationProps {
   onRegister: (farmer: any) => void;
@@ -36,6 +52,15 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const nextStep = () => setStep(s => s + 1);
+  const prevStep = () => setStep(s => s - 1);
+
+  const steps = [
+    { id: 1, title: "المعلومات الشخصية", icon: User },
+    { id: 2, title: "موقع الأرض", icon: MapPin },
+    { id: 3, title: "البيانات الزراعية", icon: ClipboardList }
+  ];
+
   const handleStep1Submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.firstName || !formData.lastName || !formData.nationalId || !formData.phone || !formData.password) {
@@ -46,253 +71,237 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
       toast.error("رقم بطاقة التعريف يجب أن يكون 13 رقم");
       return;
     }
-    setStep(2);
+    nextStep();
   };
 
   const handleStep2Submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.address || !formData.landArea || !selectedRegion) {
-      toast.error("الرجاء ملء جميع حقول الموقع");
+      toast.error("الرجاء تحديد الموقع والمساحة");
       return;
     }
-    setStep(3);
+    nextStep();
   };
 
   const handleFinalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.crops) {
-      toast.error("الرجاء إدخال المحاصيل");
+      toast.error("الرجاء إدخال تفاصيل المحاصيل");
       return;
     }
-
-    const newFarmer = {
-      ...formData,
-      region: selectedRegion,
-      role: "farmer",
-      status: "pending",
-    };
-
-    onRegister(newFarmer);
+    onRegister({ ...formData, region: selectedRegion, role: "farmer", status: "pending" });
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-amber-50 to-green-100 p-4" dir="rtl">
-      <Card className="w-full max-w-2xl shadow-2xl">
-        <CardHeader className="text-center space-y-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-t-lg">
-          <div className="flex justify-center">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
-              <Sprout className="w-10 h-10 text-green-600" />
+    <div className="min-h-screen grid lg:grid-cols-5 overflow-hidden font-sans" dir="rtl">
+      {/* Sidebar Navigation */}
+      <div className="hidden lg:flex lg:col-span-1 bg-slate-900 flex-col p-8 text-white relative">
+        <div className="flex items-center gap-3 mb-12">
+          <Sprout className="w-8 h-8 text-emerald-400" />
+          <span className="font-bold text-xl">سيس فلاح</span>
+        </div>
+
+        <div className="flex-1 space-y-8 relative">
+          {/* Step Indicators */}
+          <div className="absolute left-4 top-0 bottom-0 w-px bg-slate-800" />
+          {steps.map((s) => (
+            <div key={s.id} className="relative flex items-center gap-6 z-10 transition-all">
+              <div className={cn(
+                "w-10 h-10 rounded-xl flex items-center justify-center border-2 transition-all duration-500",
+                step >= s.id ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "bg-slate-900 border-slate-700 text-slate-500"
+              )}>
+                {step > s.id ? <CheckCircle2 className="w-6 h-6" /> : <s.icon className="w-5 h-5" />}
+              </div>
+              <div>
+                <p className={cn("text-xs font-bold uppercase tracking-widest", step >= s.id ? "text-emerald-400" : "text-slate-500")}>المرحلة {s.id}</p>
+                <p className={cn("text-sm font-bold", step >= s.id ? "text-white" : "text-slate-400")}>{s.title}</p>
+              </div>
             </div>
+          ))}
+        </div>
+
+        <div className="text-xs text-slate-500 leading-relaxed font-medium">
+          نظام الرقمنة الفلاحية المدمج<br />2026 وزارة الفلاحة م.ف.ج
+        </div>
+      </div>
+
+      {/* Main Form Area */}
+      <div className="lg:col-span-4 bg-[#f8fafc] flex items-center justify-center p-6 md:p-12 relative">
+        <Button
+          onClick={onCancel}
+          variant="ghost"
+          className="absolute top-8 left-8 text-slate-400 hover:text-slate-900"
+        >
+          <X className="w-5 h-5 ml-2" /> العودة للرئيسية
+        </Button>
+
+        <Card className="w-full max-w-3xl border-none shadow-[0_20px_60px_rgb(0,0,0,0.03)] rounded-[2.5rem] bg-white overflow-hidden">
+          <div className="h-2 w-full flex">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${(step / 3) * 100}%` }}
+              className="bg-emerald-500 h-full"
+            />
           </div>
-          <div>
-            <CardTitle className="text-2xl">تسجيل فلاح جديد</CardTitle>
-            <p className="text-green-100 mt-2">الخطوة {step} من 3</p>
-          </div>
-        </CardHeader>
 
-        <CardContent className="space-y-6 pt-8">
-          {step === 1 && (
-            <form onSubmit={handleStep1Submit} className="space-y-6">
-              <h3 className="text-lg font-semibold text-green-800">المعلومات الشخصية</h3>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="firstName">الاسم الأول</Label>
-                  <Input
-                    id="firstName"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    placeholder="محمد"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="lastName">اسم العائلة</Label>
-                  <Input
-                    id="lastName"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    placeholder="بن علي"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="nationalId">رقم بطاقة التعريف (13 رقم)</Label>
-                <Input
-                  id="nationalId"
-                  name="nationalId"
-                  value={formData.nationalId}
-                  onChange={handleInputChange}
-                  placeholder="1234567890123"
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="password">كلمة المرور</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder="********"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="phone">رقم الهاتف</Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    placeholder="05XXXXXXXX"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="email">البريد الإلكتروني</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="example@email.com"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <Button
-                  type="submit"
-                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+          <CardContent className="p-8 md:p-14">
+            <AnimatePresence mode="wait">
+              {step === 1 && (
+                <motion.form
+                  key="step1"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  onSubmit={handleStep1Submit}
+                  className="space-y-8"
                 >
-                  التالي
-                </Button>
-                <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-                  إلغاء
-                </Button>
-              </div>
-            </form>
-          )}
+                  <header>
+                    <h2 className="text-3xl font-black text-slate-900 tracking-tight">المعلومات الأساسية</h2>
+                    <p className="text-slate-400 mt-2 font-medium">يرجى إدخال بيانات الهوية لفتح حساب الفلاح الخاص بك.</p>
+                  </header>
 
-          {step === 2 && (
-            <form onSubmit={handleStep2Submit} className="space-y-6">
-              <h3 className="text-lg font-semibold text-green-800 flex items-center gap-2">
-                <MapPin className="w-5 h-5" />
-                موقع الأرض الزراعية
-              </h3>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="font-bold text-slate-700">الاسم الأول</Label>
+                      <Input name="firstName" value={formData.firstName} onChange={handleInputChange} required className="h-14 bg-slate-50 border-none rounded-2xl ring-1 ring-slate-200 focus:ring-emerald-500/20" placeholder="مثال: صالح" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-bold text-slate-700">لقب العائلة</Label>
+                      <Input name="lastName" value={formData.lastName} onChange={handleInputChange} required className="h-14 bg-slate-50 border-none rounded-2xl ring-1 ring-slate-200 focus:ring-emerald-500/20" placeholder="مثال: حمداني" />
+                    </div>
+                  </div>
 
-              <div>
-                <LeafletLocationPicker
-                  selectedRegion={selectedRegion}
-                  onLocationSelect={(region, lat, lng) => {
-                    setSelectedRegion(region);
-                    setFormData(prev => ({ ...prev, address: region, lat, lng }));
-                  }}
-                />
-              </div>
+                  <div className="space-y-2">
+                    <Label className="font-bold text-slate-700">رقم بطاقة التعريف الوطنية (13 رقم)</Label>
+                    <Input name="nationalId" value={formData.nationalId} onChange={handleInputChange} required className="h-14 bg-slate-50 border-none rounded-2xl ring-1 ring-slate-200 focus:ring-emerald-500/20 font-mono tracking-widest text-lg" placeholder="0000000000000" />
+                  </div>
 
-              <div>
-                <Label htmlFor="address">المدينة / البلدية (تُحدد آلياً من الخريطة)</Label>
-                <Input
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  placeholder="انقر على الخريطة أعلاه لتحديد المدينة"
-                  className={formData.address ? "bg-green-50 border-green-200" : ""}
-                  required
-                />
-              </div>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="font-bold text-slate-700">رقم الهاتف</Label>
+                      <Input name="phone" value={formData.phone} onChange={handleInputChange} required className="h-14 bg-slate-50 border-none rounded-2xl ring-1 ring-slate-200 focus:ring-emerald-500/20 font-mono" placeholder="05XXXXXXXX" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-bold text-slate-700">كلمة المرور</Label>
+                      <Input name="password" type="password" value={formData.password} onChange={handleInputChange} required className="h-14 bg-slate-50 border-none rounded-2xl ring-1 ring-slate-200 focus:ring-emerald-500/20" placeholder="••••••••" />
+                    </div>
+                  </div>
 
-              <div>
-                <Label htmlFor="landArea">مساحة الأرض الزراعية (هكتار)</Label>
-                <Input
-                  id="landArea"
-                  name="landArea"
-                  type="number"
-                  value={formData.landArea}
-                  onChange={handleInputChange}
-                  placeholder="مثال: 5"
-                  required
-                />
-              </div>
+                  <Button type="submit" className="w-full h-16 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xl rounded-2xl shadow-xl shadow-emerald-500/20 transition-all group">
+                    الانتقال لبيانات الموقع <ChevronLeft className="mr-2 w-6 h-6 group-hover:-translate-x-2 transition-transform" />
+                  </Button>
+                </motion.form>
+              )}
 
-              <div className="flex gap-4">
-                <Button
-                  type="submit"
-                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+              {step === 2 && (
+                <motion.form
+                  key="step2"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  onSubmit={handleStep2Submit}
+                  className="space-y-8"
                 >
-                  التالي
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setStep(1)}
-                  className="flex-1"
+                  <header>
+                    <h2 className="text-3xl font-black text-slate-900 tracking-tight">تحديد الموقع المساحي</h2>
+                    <p className="text-slate-400 mt-2 font-medium">ساعدنا في تحديد موقع أرضك الزراعية ومساحتها الإجمالية.</p>
+                  </header>
+
+                  <div className="bg-slate-50 rounded-[2.5rem] overflow-hidden border border-slate-100 relative shadow-inner">
+                    <LeafletLocationPicker
+                      selectedRegion={selectedRegion}
+                      onLocationSelect={(region, lat, lng) => {
+                        setSelectedRegion(region);
+                        setFormData(prev => ({ ...prev, address: region, lat, lng }));
+                      }}
+                    />
+                    <div className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-200 shadow-sm z-[1000]">
+                      <span className="text-xs font-bold text-slate-400 ml-2">المنطقة المحددة:</span>
+                      <span className="text-sm font-black text-emerald-600">{selectedRegion || "لم تكتشف بعد"}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="font-bold text-slate-700">البلدية / المنطقة</Label>
+                      <Input name="address" value={formData.address} onChange={handleInputChange} readOnly className="h-14 bg-slate-100/50 border-none rounded-2xl italic text-slate-500 cursor-not-allowed" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-bold text-slate-700">المساحة الإجمالية (بالهكتار)</Label>
+                      <div className="relative">
+                        <Input name="landArea" type="number" value={formData.landArea} onChange={handleInputChange} required className="h-14 bg-slate-50 border-none rounded-2xl ring-1 ring-slate-200 focus:ring-emerald-500/20 pr-4 pl-12" placeholder="مثال: 12" />
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">HECTARE</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 pt-4">
+                    <Button type="button" variant="ghost" onClick={prevStep} className="h-16 flex-1 text-slate-500 font-bold text-lg rounded-2xl">السابق</Button>
+                    <Button type="submit" className="h-16 flex-[2] bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xl rounded-2xl shadow-xl shadow-emerald-500/20">البيانات النهائية</Button>
+                  </div>
+                </motion.form>
+              )}
+
+              {step === 3 && (
+                <motion.form
+                  key="step3"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  onSubmit={handleFinalSubmit}
+                  className="space-y-8"
                 >
-                  السابق
-                </Button>
-              </div>
-            </form>
-          )}
+                  <header>
+                    <h2 className="text-3xl font-black text-slate-900 tracking-tight">النشاطات الفلاحية</h2>
+                    <p className="text-slate-400 mt-2 font-medium">أخبرنا عما تزرعه أو تنتجه في مستثمرتك الفلاحية.</p>
+                  </header>
 
-          {step === 3 && (
-            <form onSubmit={handleFinalSubmit} className="space-y-6">
-              <h3 className="text-lg font-semibold text-green-800">المعلومات الزراعية</h3>
+                  <div className="space-y-2">
+                    <Label className="font-bold text-slate-700">قائمة المحاصيل والمنتجات</Label>
+                    <Textarea
+                      name="crops"
+                      value={formData.crops}
+                      onChange={handleInputChange}
+                      rows={5}
+                      className="bg-slate-50 border-none rounded-2xl ring-1 ring-slate-200 focus:ring-emerald-500/20 p-6 text-lg leading-relaxed shadow-inner"
+                      placeholder="اكتب المحاصيل التي تعتمدها، التجهيزات المتوفرة، أو نوع المستثمرة (أشجار مثمرة، حبوب، بيوت بلاستيكية...)"
+                    />
+                  </div>
 
-              <div>
-                <Label htmlFor="crops">المحاصيل والمنتجات الزراعية</Label>
-                <Textarea
-                  id="crops"
-                  name="crops"
-                  value={formData.crops}
-                  onChange={handleInputChange}
-                  placeholder="اكتب المحاصيل التي تزرعها (مثال: قمح، شعير، تمر، إلخ)"
-                  required
-                  rows={4}
-                />
-              </div>
+                  <div className="p-8 bg-emerald-50/50 rounded-[2rem] border border-emerald-100/50 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <ShieldCheck className="w-6 h-6 text-emerald-600" />
+                      <h4 className="font-black text-emerald-900">تأكيد نهائي للبيانات</h4>
+                    </div>
+                    <div className="grid grid-cols-2 gap-y-2 text-sm">
+                      <span className="text-slate-500 font-medium">اسم الفلاح:</span>
+                      <span className="text-slate-900 font-black">{formData.firstName} {formData.lastName}</span>
+                      <span className="text-slate-500 font-medium">الولاية:</span>
+                      <span className="text-slate-900 font-black">{selectedRegion}</span>
+                      <span className="text-slate-500 font-medium">المساحة:</span>
+                      <span className="text-slate-900 font-black">{formData.landArea} هكتار</span>
+                    </div>
+                    <p className="text-xs text-emerald-700/60 leading-relaxed font-bold pt-2 italic">
+                      * بتقديمك لهذا الطلب، أنت تقر بصحة المعلومات المقدمة وتدرك أنه سيتم التحقق منها من قبل السلطات الولائية.
+                    </p>
+                  </div>
 
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-700">
-                <p className="font-semibold">✓ ملخص التسجيل:</p>
-                <ul className="mt-2 space-y-1">
-                  <li>الاسم: {formData.firstName} {formData.lastName}</li>
-                  <li>الولاية: {selectedRegion}</li>
-                  <li>مساحة الأرض: {formData.landArea} هكتار</li>
-                </ul>
-                <p className="mt-3 text-xs">يرجى التأكد من أن جميع البيانات صحيحة. سيتم التحقق منها من قبل الإدارة.</p>
-              </div>
-
-              <div className="flex gap-4">
-                <Button
-                  type="submit"
-                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
-                >
-                  تقديم الطلب
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setStep(2)}
-                  className="flex-1"
-                >
-                  السابق
-                </Button>
-              </div>
-            </form>
-          )}
-        </CardContent>
-      </Card>
+                  <div className="flex gap-4 pt-4">
+                    <Button type="button" variant="ghost" onClick={prevStep} className="h-16 flex-1 text-slate-500 font-bold text-lg rounded-2xl">تعديل السابق</Button>
+                    <Button type="submit" className="h-16 flex-[2] bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xl rounded-2xl shadow-xl shadow-emerald-700/20">تقديم الطلب للمراجعة</Button>
+                  </div>
+                </motion.form>
+              )}
+            </AnimatePresence>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
+}
+
+function X({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+  )
 }

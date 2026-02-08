@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Polygon, Popup, LayersControl, Marker } from "react-leaflet";
+import { MapContainer, TileLayer, Polygon, Popup, LayersControl, Marker, Circle } from "react-leaflet";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { MapPin, Leaf, Users } from "lucide-react";
+import { MapPin, Leaf, Users, Navigation, Phone, AlertCircle } from "lucide-react";
 import api from "../utils/api";
 import { toast } from "sonner";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { cn } from "../utils/cn";
 
-// Fix for default marker icons if needed elsewhere
+// Fix for default marker icons
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
@@ -16,6 +18,15 @@ let DefaultIcon = L.icon({
     shadowUrl: iconShadow,
     iconSize: [25, 41],
     iconAnchor: [12, 41]
+});
+
+// Custom green icon for farmers with land polygons
+let FarmerIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [30, 48],
+    iconAnchor: [15, 48],
+    className: 'farmer-marker'
 });
 
 interface LandInfo {
@@ -29,13 +40,15 @@ interface LandInfo {
         firstName: string;
         lastName: string;
         phone: string;
+        region?: string;
+        landArea?: number;
     };
 }
 
 export default function LeafletAdminFarmersMap() {
     const [lands, setLands] = useState<LandInfo[]>([]);
     const [farmersWithLocation, setFarmersWithLocation] = useState<any[]>([]);
-    const [stats, setStats] = useState({ approvedFarmers: 0, totalArea: 0 });
+    const [stats, setStats] = useState({ approvedFarmers: 0, totalArea: 0, landsWithPolygons: 0, farmersWithMarkers: 0 });
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -47,32 +60,61 @@ export default function LeafletAdminFarmersMap() {
             setIsLoading(true);
             const data = await api.admin.getFullData();
 
+            console.log('📍 Full data received:', data);
+
             // 1. Get approved farmers
             const approvedFarmers = data.farmers.filter((f: any) => f.status === 'approved');
             const approvedFarmerIds = new Set(approvedFarmers.map((f: any) => f._id));
 
-            // 2. Filter lands (Polygons)
+            console.log('✅ Approved farmers:', approvedFarmers.length);
+            console.log('📋 All lands:', data.lands.length);
+
+            // 2. Filter lands (Polygons) - only for approved farmers with valid coordinates
             const validLands = data.lands.filter((l: any) => {
                 // Handle both populated and unpopulated user field
                 const userId = typeof l.user === 'object' ? l.user?._id : l.user;
-                return (
-                    l.coordinates &&
-                    l.coordinates.length > 2 &&
-                    approvedFarmerIds.has(userId)
-                );
+                const hasValidCoords = l.coordinates && Array.isArray(l.coordinates) && l.coordinates.length > 2;
+
+                if (!hasValidCoords) {
+                    console.log('⚠️ Land without valid coordinates:', l.name, l._id);
+                }
+
+                return hasValidCoords && approvedFarmerIds.has(userId);
             });
 
-            // 3. Filter farmers with point locations (Markers)
-            const validMarkers = approvedFarmers.filter((f: any) => f.lat && f.lng);
+            console.log('🗺️ Valid lands with polygons:', validLands.length);
+            validLands.forEach((land: any) => {
+                console.log('  - Land:', land.name, 'Coords:', land.coordinates?.length, 'User:', land.user?.firstName);
+            });
+
+            // 3. Filter farmers with point locations (Markers) - only those WITHOUT land polygons
+            const farmerIdsWithPolygons = new Set(validLands.map((l: any) =>
+                typeof l.user === 'object' ? l.user?._id : l.user
+            ));
+
+            const validMarkers = approvedFarmers.filter((f: any) => {
+                const hasLocation = f.lat && f.lng;
+                const hasNoPolygon = !farmerIdsWithPolygons.has(f._id);
+                return hasLocation && hasNoPolygon;
+            });
+
+            console.log('📍 Farmers with marker locations (no polygons):', validMarkers.length);
 
             setLands(validLands);
             setFarmersWithLocation(validMarkers);
             setStats({
                 approvedFarmers: approvedFarmers.length,
-                totalArea: validLands.reduce((sum: number, l: any) => sum + (l.area || 0), 0)
+                totalArea: validLands.reduce((sum: number, l: any) => sum + (l.area || 0), 0),
+                landsWithPolygons: validLands.length,
+                farmersWithMarkers: validMarkers.length
             });
-        } catch (e) {
-            toast.error("فشل تحميل بيانات الخريطة");
+
+            if (validLands.length === 0 && validMarkers.length === 0) {
+                toast.info('لا توجد بيانات موقع للفلاحين المعتمدين حالياً');
+            }
+        } catch (e: any) {
+            console.error('❌ Map data error:', e);
+            toast.error("فشل تحميل بيانات الخريطة: " + (e.message || 'خطأ غير معروف'));
         } finally {
             setIsLoading(false);
         }
@@ -82,129 +124,237 @@ export default function LeafletAdminFarmersMap() {
         return coords.map(c => [c.lat, c.lng] as [number, number]);
     };
 
-    if (isLoading) return <div className="p-8 text-center text-gray-500 font-arabic">جاري التحميل...</div>;
+    const getPolygonColor = (area: number) => {
+        if (area > 50) return '#059669'; // Large farms - dark green
+        if (area > 20) return '#10b981'; // Medium farms - green
+        return '#34d399'; // Small farms - light green
+    };
+
+    if (isLoading) {
+        return (
+            <div className="p-8 text-center" dir="rtl">
+                <div className="animate-pulse space-y-4">
+                    <div className="h-8 bg-slate-200 rounded w-1/3 mx-auto"></div>
+                    <div className="h-64 bg-slate-100 rounded-3xl"></div>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="space-y-6 font-arabic" dir="rtl">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600">الفلاحون المعتمدون</p>
-                                <div className="text-3xl font-bold text-green-600 mt-1">{stats.approvedFarmers}</div>
-                            </div>
-                            <Users className="w-8 h-8 text-green-600 opacity-20" />
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600">إجمالي مساحة الأراضي</p>
-                                <div className="text-3xl font-bold text-amber-600 mt-1">
-                                    {stats.totalArea.toLocaleString()}
+        <div className="space-y-8 animate-in-fade" dir="rtl">
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                    <Card className="border-none bg-gradient-to-br from-emerald-50 to-white rounded-[2rem] shadow-sm border border-emerald-100">
+                        <CardContent className="p-8">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">الفلاحون المعتمدون</p>
+                                    <div className="text-4xl font-black text-emerald-600">{stats.approvedFarmers}</div>
                                 </div>
-                                <p className="text-xs text-gray-500">هكتار</p>
+                                <div className="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center">
+                                    <Users className="w-7 h-7 text-emerald-600" />
+                                </div>
                             </div>
-                            <Leaf className="w-8 h-8 text-amber-600 opacity-20" />
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600">الأراضي الممسوحة</p>
-                                <div className="text-3xl font-bold text-blue-600 mt-1">{lands.length}</div>
-                                <p className="text-xs text-gray-500">{farmersWithLocation.length} مواقع نقطية</p>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                    <Card className="border-none bg-gradient-to-br from-amber-50 to-white rounded-[2rem] shadow-sm border border-amber-100">
+                        <CardContent className="p-8">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">إجمالي المساحة</p>
+                                    <div className="text-4xl font-black text-amber-600">{stats.totalArea.toFixed(1)}</div>
+                                    <p className="text-xs font-bold text-slate-400 mt-1">هكتار</p>
+                                </div>
+                                <div className="w-14 h-14 bg-amber-100 rounded-2xl flex items-center justify-center">
+                                    <Leaf className="w-7 h-7 text-amber-600" />
+                                </div>
                             </div>
-                            <MapPin className="w-8 h-8 text-blue-600 opacity-20" />
-                        </div>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                    <Card className="border-none bg-gradient-to-br from-blue-50 to-white rounded-[2rem] shadow-sm border border-blue-100">
+                        <CardContent className="p-8">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">الأراضي الممسوحة</p>
+                                    <div className="text-4xl font-black text-blue-600">{stats.landsWithPolygons}</div>
+                                    <p className="text-xs font-bold text-slate-400 mt-1">قطعة أرضية</p>
+                                </div>
+                                <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center">
+                                    <Navigation className="w-7 h-7 text-blue-600" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+                    <Card className="border-none bg-gradient-to-br from-purple-50 to-white rounded-[2rem] shadow-sm border border-purple-100">
+                        <CardContent className="p-8">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">مواقع نقطية</p>
+                                    <div className="text-4xl font-black text-purple-600">{stats.farmersWithMarkers}</div>
+                                    <p className="text-xs font-bold text-slate-400 mt-1">موقع</p>
+                                </div>
+                                <div className="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center">
+                                    <MapPin className="w-7 h-7 text-purple-600" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </motion.div>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <MapPin className="text-green-600" />
-                        خارطة الأراضي الفلاحية الوطنية (الجزائر)
-                    </CardTitle>
+            {/* Map Card */}
+            <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white rounded-[3rem] overflow-hidden">
+                <CardHeader className="p-8 border-b border-slate-50">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center">
+                                <MapPin className="w-7 h-7 text-emerald-600" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-3xl font-black text-slate-900">خارطة الأراضي الفلاحية الوطنية</CardTitle>
+                                <p className="text-slate-500 font-medium mt-1">توزيع المستثمرات الفلاحية عبر التراب الوطني</p>
+                            </div>
+                        </div>
+                    </div>
                 </CardHeader>
-                <CardContent>
-                    <div className="w-full h-[600px] border-2 border-green-200 rounded-lg relative overflow-hidden z-0">
-                        <MapContainer
-                            center={[28.0339, 1.6596]}
-                            zoom={6}
-                            style={{ height: "100%", width: "100%" }}
-                            scrollWheelZoom={true}
-                        >
-                            <TileLayer
-                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                            />
-                            <LayersControl position="topright">
-                                <LayersControl.BaseLayer checked name="خريطة الشوارع">
-                                    <TileLayer
-                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                    />
-                                </LayersControl.BaseLayer>
-                                <LayersControl.BaseLayer name="خريطة القمر الصناعي">
-                                    <TileLayer
-                                        attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EBP, and the GIS User Community'
-                                        url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                                    />
-                                </LayersControl.BaseLayer>
-                            </LayersControl>
+                <CardContent className="p-0">
+                    {lands.length === 0 && farmersWithLocation.length === 0 ? (
+                        <div className="py-24 text-center">
+                            <AlertCircle className="w-16 h-16 text-slate-200 mx-auto mb-4" />
+                            <h3 className="text-xl font-black text-slate-300 mb-2">لا توجد بيانات موقع</h3>
+                            <p className="text-slate-400 font-medium">لم يقم أي فلاح معتمد بتحديد موقع أراضيه بعد</p>
+                        </div>
+                    ) : (
+                        <div className="w-full h-[700px] relative overflow-hidden">
+                            <MapContainer
+                                center={[28.0339, 1.6596]}
+                                zoom={6}
+                                style={{ height: "100%", width: "100%" }}
+                                scrollWheelZoom={true}
+                            >
+                                <LayersControl position="topright">
+                                    <LayersControl.BaseLayer checked name="خريطة الشوارع">
+                                        <TileLayer
+                                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                        />
+                                    </LayersControl.BaseLayer>
+                                    <LayersControl.BaseLayer name="خريطة القمر الصناعي">
+                                        <TileLayer
+                                            attribution='Tiles &copy; Esri'
+                                            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                                        />
+                                    </LayersControl.BaseLayer>
+                                </LayersControl>
 
-                            {/* Draw Land Polygons */}
-                            {lands.map((land) => (
-                                <Polygon
-                                    key={land._id}
-                                    positions={getPolygonPath(land.coordinates)}
-                                    pathOptions={{
-                                        color: '#16a34a',
-                                        fillColor: '#22c55e',
-                                        fillOpacity: 0.5,
-                                        weight: 2
-                                    }}
-                                >
-                                    <Popup>
-                                        <div className="text-right font-arabic" dir="rtl">
-                                            <h3 className="font-bold text-green-700 m-0">
-                                                {typeof land.user === 'object' ? `${land.user.firstName} ${land.user.lastName}` : 'فلاح'}
-                                            </h3>
-                                            <p className="m-1 text-sm font-bold text-gray-700">المستغلة: {land.name || 'بدون اسم'}</p>
-                                            <p className="m-1 text-sm text-gray-600">الموقع: {land.location}</p>
-                                            <p className="m-0 text-amber-600 font-bold">{land.area} هكتار</p>
-                                            {typeof land.user === 'object' && (
-                                                <p className="mt-2 text-xs text-blue-600">الهاتف: {land.user.phone}</p>
-                                            )}
-                                        </div>
-                                    </Popup>
-                                </Polygon>
-                            ))}
+                                {/* Draw Land Polygons */}
+                                {lands.map((land) => {
+                                    const color = getPolygonColor(land.area);
+                                    return (
+                                        <Polygon
+                                            key={land._id}
+                                            positions={getPolygonPath(land.coordinates)}
+                                            pathOptions={{
+                                                color: color,
+                                                fillColor: color,
+                                                fillOpacity: 0.4,
+                                                weight: 3
+                                            }}
+                                        >
+                                            <Popup>
+                                                <div className="text-right font-arabic p-2" dir="rtl">
+                                                    <h3 className="font-black text-emerald-700 text-lg mb-2">
+                                                        {typeof land.user === 'object' ? `${land.user.firstName} ${land.user.lastName}` : 'فلاح'}
+                                                    </h3>
+                                                    <div className="space-y-1">
+                                                        <p className="text-sm font-bold text-slate-700">
+                                                            <span className="text-slate-500">المستغلة:</span> {land.name || 'بدون اسم'}
+                                                        </p>
+                                                        <p className="text-sm font-bold text-slate-700">
+                                                            <span className="text-slate-500">الموقع:</span> {land.location}
+                                                        </p>
+                                                        <p className="text-lg font-black text-amber-600 mt-2">
+                                                            {land.area.toFixed(2)} هكتار
+                                                        </p>
+                                                        {typeof land.user === 'object' && land.user.phone && (
+                                                            <p className="text-xs text-blue-600 font-bold mt-2 flex items-center gap-1 justify-end">
+                                                                <span>{land.user.phone}</span>
+                                                                <Phone className="w-3 h-3" />
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </Popup>
+                                        </Polygon>
+                                    );
+                                })}
 
-                            {/* Draw Fallback Markers for Farmers without detailed land polygons */}
-                            {farmersWithLocation.map((farmer) => (
-                                <Marker
-                                    key={`marker-${farmer._id}`}
-                                    position={[farmer.lat, farmer.lng]}
-                                    icon={DefaultIcon}
-                                >
-                                    <Popup>
-                                        <div className="text-right font-arabic" dir="rtl">
-                                            <h3 className="font-bold text-green-700 m-0">{farmer.firstName} {farmer.lastName}</h3>
-                                            <p className="m-1 text-sm">{farmer.region}</p>
-                                            <p className="m-0 text-amber-600 font-bold">{farmer.landArea} هكتار (إجمالي)</p>
-                                        </div>
-                                    </Popup>
-                                </Marker>
-                            ))}
-                        </MapContainer>
+                                {/* Draw Fallback Markers for Farmers without detailed land polygons */}
+                                {farmersWithLocation.map((farmer) => (
+                                    <Marker
+                                        key={`marker-${farmer._id}`}
+                                        position={[farmer.lat, farmer.lng]}
+                                        icon={FarmerIcon}
+                                    >
+                                        <Popup>
+                                            <div className="text-right font-arabic p-2" dir="rtl">
+                                                <h3 className="font-black text-emerald-700 text-lg mb-2">
+                                                    {farmer.firstName} {farmer.lastName}
+                                                </h3>
+                                                <div className="space-y-1">
+                                                    <p className="text-sm font-bold text-slate-700">
+                                                        <span className="text-slate-500">المنطقة:</span> {farmer.region || 'غير محدد'}
+                                                    </p>
+                                                    {farmer.landArea && (
+                                                        <p className="text-lg font-black text-amber-600 mt-2">
+                                                            {farmer.landArea} هكتار (إجمالي)
+                                                        </p>
+                                                    )}
+                                                    {farmer.phone && (
+                                                        <p className="text-xs text-blue-600 font-bold mt-2 flex items-center gap-1 justify-end">
+                                                            <span>{farmer.phone}</span>
+                                                            <Phone className="w-3 h-3" />
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </Popup>
+                                    </Marker>
+                                ))}
+                            </MapContainer>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* Legend */}
+            <Card className="border-none bg-slate-50 rounded-2xl">
+                <CardContent className="p-6">
+                    <h4 className="font-black text-slate-900 mb-4">دليل الألوان</h4>
+                    <div className="flex flex-wrap gap-6">
+                        <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-lg" style={{ backgroundColor: '#34d399' }}></div>
+                            <span className="text-sm font-bold text-slate-600">أراضي صغيرة (&lt; 20 هكتار)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-lg" style={{ backgroundColor: '#10b981' }}></div>
+                            <span className="text-sm font-bold text-slate-600">أراضي متوسطة (20-50 هكتار)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-lg" style={{ backgroundColor: '#059669' }}></div>
+                            <span className="text-sm font-bold text-slate-600">أراضي كبيرة (&gt; 50 هكتار)</span>
+                        </div>
                     </div>
                 </CardContent>
             </Card>

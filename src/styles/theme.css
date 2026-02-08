@@ -2,84 +2,68 @@
 
 :root {
   --font-size: 16px;
-  --background: #fafaf7;
-  --foreground: #2d3221;
+  --background: #fbfcf8;
+  --foreground: #1c2512;
   --card: #ffffff;
-  --card-foreground: #2d3221;
+  --card-foreground: #1c2512;
   --popover: #ffffff;
-  --popover-foreground: #2d3221;
-  --primary: #2f7d32;
-  --primary-foreground: #ffffff;
-  --secondary: #8d6e63;
-  --secondary-foreground: #ffffff;
-  --muted: #e8e6e1;
-  --muted-foreground: #7a7763;
-  --accent: #f5deb3;
-  --accent-foreground: #2d3221;
-  --destructive: #d4183d;
+  --popover-foreground: #1c2512;
+  /* Premium Forest Green */
+  --primary: #15803d;
+  --primary-foreground: #f0fdf4;
+  /* Earthy Brown */
+  --secondary: #78350f;
+  --secondary-foreground: #fef3c7;
+  --muted: #f0f2ea;
+  --muted-foreground: #64748b;
+  /* Sage/Wheat Accent */
+  --accent: #dcfce7;
+  --accent-foreground: #166534;
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: rgba(47, 125, 50, 0.15);
-  --input: transparent;
-  --input-background: #f5f3f0;
-  --switch-background: #a1887f;
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --ring: #2f7d32;
-  --chart-1: #2f7d32;
-  --chart-2: #558b2f;
-  --chart-3: #f57f17;
-  --chart-4: #8d6e63;
-  --chart-5: #d7ccc8;
-  --radius: 0.625rem;
-  --sidebar: #f1f8f4;
-  --sidebar-foreground: #2d3221;
-  --sidebar-primary: #2f7d32;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e8f5e9;
-  --sidebar-accent-foreground: #1b5e20;
-  --sidebar-border: #c8e6c9;
-  --sidebar-ring: #2f7d32;
+  --border: #e2e8f0;
+  --input: #f8fafc;
+  --ring: #22c55e;
+
+  --radius: 0.75rem;
+
+  --chart-1: #16a34a;
+  --chart-2: #ca8a04;
+  --chart-3: #2563eb;
+  --chart-4: #7c3aed;
+  --chart-5: #db2777;
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-blur: 12px;
 }
 
 .dark {
-  --background: #1b1b18;
-  --foreground: #f1ede6;
-  --card: #252420;
-  --card-foreground: #f1ede6;
-  --popover: #252420;
-  --popover-foreground: #f1ede6;
-  --primary: #66bb6a;
-  --primary-foreground: #1b1b18;
-  --secondary: #a1887f;
-  --secondary-foreground: #f1ede6;
-  --muted: #3e3b38;
-  --muted-foreground: #b8b3ad;
-  --accent: #795548;
-  --accent-foreground: #f1ede6;
-  --destructive: #e53935;
-  --destructive-foreground: #f1ede6;
-  --border: rgba(102, 187, 106, 0.2);
-  --input: #3e3b38;
-  --input-background: #3e3b38;
-  --ring: #66bb6a;
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --chart-1: #66bb6a;
-  --chart-2: #9ccc65;
-  --chart-3: #ffd54f;
-  --chart-4: #ffb74d;
-  --chart-5: #a1887f;
-  --sidebar: #252420;
-  --sidebar-foreground: #f1ede6;
-  --sidebar-primary: #66bb6a;
-  --sidebar-primary-foreground: #1b1b18;
-  --sidebar-accent: #2e6f2f;
-  --sidebar-accent-foreground: #c8e6c9;
-  --sidebar-border: #3e3b38;
-  --sidebar-ring: #66bb6a;
+  --background: #09090b;
+  --foreground: #f8fafc;
+  --card: #18181b;
+  --card-foreground: #f8fafc;
+  --popover: #18181b;
+  --popover-foreground: #f8fafc;
+  --primary: #4ade80;
+  --primary-foreground: #052e16;
+  --secondary: #fbbf24;
+  --secondary-foreground: #451a03;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #14532d;
+  --accent-foreground: #bbf7d0;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #4ade80;
+
+  --glass-bg: rgba(24, 24, 27, 0.7);
+  --glass-border: rgba(63, 63, 70, 0.5);
 }
 
 @theme inline {
+  --font-sans: 'Inter', 'Alexandria', sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -98,85 +82,88 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
-  --color-input-background: var(--input-background);
-  --color-switch-background: var(--switch-background);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Custom Utilities */
+  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    font-family: var(--font-sans);
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased selection:bg-primary/20 transition-colors duration-300;
   }
 
-  /**
-  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
-  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
-  */
-
-  html {
-    font-size: var(--font-size);
+  /* Custom Scrollbar for a premium look */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
   }
 
-  h1 {
-    font-size: var(--text-2xl);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
   }
 
-  h2 {
-    font-size: var(--text-xl);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/40 transition-colors;
   }
 
-  h3 {
-    font-size: var(--text-lg);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+  input,
+  select,
+  textarea {
+    @apply focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[var(--glass-blur)] shadow-glass;
   }
 
-  h4 {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+  .glass-card {
+    @apply glass rounded-[var(--radius)] p-6 transition-all hover:translate-y-[-2px] hover:shadow-xl;
   }
 
-  label {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+  .btn-premium {
+    @apply inline-flex items-center justify-center rounded-[var(--radius)] px-4 py-2 text-sm font-semibold transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
   }
 
-  button {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+  .btn-primary {
+    @apply btn-premium bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90;
   }
 
-  input {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-normal);
-    line-height: 1.5;
+  .btn-outline {
+    @apply btn-premium border-2 border-primary/20 text-primary hover:bg-primary/5 hover:border-primary/40;
+  }
+
+  .section-container {
+    @apply p-6 lg:p-10 space-y-8 max-w-7xl mx-auto;
+  }
+}
+
+@layer utilities {
+  .animate-in-fade {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }

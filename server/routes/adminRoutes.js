@@ -90,12 +90,12 @@ router.get('/stats', [auth, adminAuth], async (req, res) => {
 router.get('/full-data', [auth, adminAuth], async (req, res) => {
     try {
         const farmers = await User.find({ role: 'farmer' });
-        const crops = await Crop.find().populate('user', 'firstName lastName');
-        const sales = await Sale.find().populate('user', 'firstName lastName');
-        const lands = await Land.find().populate('user', 'firstName lastName');
-        const equipment = await Equipment.find().populate('user', 'firstName lastName');
-        const workers = await Worker.find().populate('user', 'firstName lastName');
-        const livestock = await Livestock.find().populate('user', 'firstName lastName');
+        const crops = await Crop.find().populate('user', 'firstName lastName phone region');
+        const sales = await Sale.find().populate('user', 'firstName lastName phone region');
+        const lands = await Land.find().populate('user', 'firstName lastName phone region landArea');
+        const equipment = await Equipment.find().populate('user', 'firstName lastName phone region');
+        const workers = await Worker.find().populate('user', 'firstName lastName phone region');
+        const livestock = await Livestock.find().populate('user', 'firstName lastName phone region');
 
         res.json({
             farmers,
@@ -107,6 +107,7 @@ router.get('/full-data', [auth, adminAuth], async (req, res) => {
             livestock
         });
     } catch (err) {
+        console.error('Full data error:', err);
         res.status(500).send('Server Error');
     }
 });
