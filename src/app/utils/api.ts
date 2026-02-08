@@ -33,6 +33,8 @@ const api = {
     farmer: {
         getStats: () => api.request('/farmer/stats'),
         getMenuStats: () => api.request('/farmer/menu-stats'),
+        getDashboardData: () => api.request('/farmer/dashboard-data'),
+        search: (query: string) => api.request(`/farmer/search?q=${encodeURIComponent(query)}`),
 
         // Crops
         getCrops: () => api.request('/farmer/crops'),

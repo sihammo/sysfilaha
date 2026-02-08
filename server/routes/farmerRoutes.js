@@ -373,4 +373,153 @@ router.delete('/workers/:id', auth, async (req, res) => {
     }
 });
 
+// GET /api/farmer/dashboard-data
+router.get('/dashboard-data', auth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const farmer = await User.findById(userId);
+        if (!farmer) return res.status(404).json({ msg: 'Farmer not found' });
+
+        // Get Land for coordinates
+        const land = await Land.findOne({ user: userId });
+
+        // Get Stats for AI and Badges
+        const [crops, livestock, sales, equipment, workers, reports] = await Promise.all([
+            Crop.find({ user: userId }),
+            Livestock.find({ user: userId }),
+            Sale.find({ user: userId }),
+            Equipment.find({ user: userId }),
+            Worker.find({ user: userId }),
+            Report.find({ user: userId })
+        ]);
+
+        // Weather Logic (OpenWeatherMap)
+        let weather = {
+            current: { temp: 24, condition: "مشمس جزئياً", wind: "12 كم/س" },
+            forecast: [
+                { day: "الاثنين", temp: 22 },
+                { day: "الثلاثاء", temp: 24 },
+                { day: "الأربعاء", temp: 19 },
+                { day: "الخميس", temp: 21 }
+            ]
+        };
+
+        const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
+        if (WEATHER_API_KEY && land && land.coordinates && land.coordinates.length > 0) {
+            try {
+                const { lat, lng } = land.coordinates[0];
+                const weatherRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lng}&units=metric&lang=ar&appid=${WEATHER_API_KEY}`);
+                const weatherData = await weatherRes.json();
+
+                if (weatherData.list) {
+                    const current = weatherData.list[0];
+                    weather.current = {
+                        temp: Math.round(current.main.temp),
+                        condition: current.weather[0].description,
+                        wind: `${Math.round(current.wind.speed * 3.6)} كم/س`
+                    };
+
+                    // Filter forecast (one per day)
+                    const daily = [];
+                    const seenDays = new Set();
+                    const dayNames = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+
+                    weatherData.list.forEach(item => {
+                        const date = new Date(item.dt * 1000);
+                        const dayName = dayNames[date.getDay()];
+                        if (!seenDays.has(dayName) && daily.length < 4) {
+                            daily.push({ day: dayName, temp: Math.round(item.main.temp) });
+                            seenDays.add(dayName);
+                        }
+                    });
+                    weather.forecast = daily;
+                }
+            } catch (e) {
+                console.error("Weather fetch failed:", e);
+            }
+        }
+
+        // AI Recommendations (Rule-based)
+        const recommendations = [];
+        if (weather.current.temp > 30) {
+            recommendations.push({ type: 'warning', message: 'تنبيه: الطقس المتوقع حار جداً. يُنصح بزيادة وتيرة الري لحماية المحاصيل من الإجهاد المائي.' });
+        }
+
+        if (land && land.area > 5 && crops.length < 2) {
+            recommendations.push({ type: 'suggestion', message: 'ملاحظة: مساحة أرضك كبيرة (أكثر من 5 هكتار). يمكنك تنويع الإنتاج بزراعة محاصيل موسمية إضافية.' });
+        }
+
+        const statsTotalRevenue = sales.reduce((sum, s) => sum + (s.totalPrice || 0), 0);
+        const lastMonthSales = sales.filter(s => {
+            const d = new Date(s.date);
+            const now = new Date();
+            return d.getMonth() === now.getMonth() - 1 && d.getFullYear() === now.getFullYear();
+        });
+
+        if (lastMonthSales.length === 0 && crops.length > 0) {
+            recommendations.push({ type: 'alert', message: 'تنبيه: لم يتم تسجيل أي مبيعات خلال الشهر الماضي. هل ترغب في المساعدة في التسويق عبر منصة سيس فلاح؟' });
+        }
+
+        if (recommendations.length === 0) {
+            recommendations.push({ type: 'info', message: 'حالة مستثمرتك ممتازة. لا توجد تنبيهات طارئة حالياً. استمر في العمل الجيد!' });
+        }
+
+        res.json({
+            profile: {
+                name: `${farmer.firstName} ${farmer.lastName}`,
+                location: farmer.region || 'غير محدد',
+                avatar: null
+            },
+            farm: {
+                address: farmer.address,
+                area: land ? land.area : (parseFloat(farmer.landArea) || 0),
+                wilaya: farmer.region,
+                coordinates: land ? land.coordinates : []
+            },
+            weather,
+            aiRecommendations: recommendations,
+            menuStats: {
+                cropsCount: crops.length,
+                livestockCount: livestock.length,
+                salesCount: sales.length,
+                equipmentCount: equipment.length,
+                workersCount: workers.length,
+                reportsCount: reports.length
+            }
+        });
+    } catch (err) {
+        console.error('Dashboard data error:', err);
+        res.status(500).send('Server error');
+    }
+});
+
+// GET /api/farmer/search
+router.get('/search', auth, async (req, res) => {
+    try {
+        const query = req.query.q;
+        if (!query) return res.json({ results: [] });
+
+        const userId = req.user.id;
+        const regex = new RegExp(query, 'i');
+
+        const [crops, equipment, livestock, sales] = await Promise.all([
+            Crop.find({ user: userId, name: regex }),
+            Equipment.find({ user: userId, name: regex }),
+            Livestock.find({ user: userId, type: regex }),
+            Sale.find({ user: userId, product: regex })
+        ]);
+
+        const results = [
+            ...crops.map(item => ({ type: 'crop', label: 'محصول', name: item.name, id: item._id })),
+            ...equipment.map(item => ({ type: 'equipment', label: 'عتاد', name: item.name, id: item._id })),
+            ...livestock.map(item => ({ type: 'livestock', label: 'مواشي', name: item.type, id: item._id })),
+            ...sales.map(item => ({ type: 'sale', label: 'مبيعات', name: item.product, id: item._id }))
+        ];
+
+        res.json(results);
+    } catch (err) {
+        res.status(500).send('Server error');
+    }
+});
+
 module.exports = router;
