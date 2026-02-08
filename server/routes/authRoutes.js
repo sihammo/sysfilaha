@@ -124,8 +124,14 @@ router.post('/login', async (req, res) => {
 // @access  Public
 router.get('/stats', async (req, res) => {
     try {
-        const totalFarmers = await User.countDocuments({ role: 'farmer' });
-        const allLands = await Land.find();
+        const totalFarmers = await User.countDocuments({ role: 'farmer', status: 'approved' });
+
+        // Get only approved farmers' IDs
+        const approvedFarmers = await User.find({ role: 'farmer', status: 'approved' }).select('_id');
+        const approvedFarmerIds = approvedFarmers.map(f => f._id);
+
+        // Get lands only for approved farmers
+        const allLands = await Land.find({ user: { $in: approvedFarmerIds } });
         const totalArea = allLands.reduce((sum, l) => sum + (l.area || 0), 0);
 
         res.json({
