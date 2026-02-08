@@ -27,6 +27,7 @@ const api = {
     auth: {
         login: (credentials: any) => api.request('/auth/login', 'POST', credentials),
         register: (userData: any) => api.request('/auth/register', 'POST', userData),
+        getPublicStats: () => api.request('/auth/stats'),
     },
 
     farmer: {

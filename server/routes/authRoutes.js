@@ -119,4 +119,23 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// @route   GET api/auth/stats
+// @desc    Get public statistics for landing page
+// @access  Public
+router.get('/stats', async (req, res) => {
+    try {
+        const totalFarmers = await User.countDocuments({ role: 'farmer' });
+        const allLands = await Land.find();
+        const totalArea = allLands.reduce((sum, l) => sum + (l.area || 0), 0);
+
+        res.json({
+            totalFarmers,
+            totalArea
+        });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+});
+
 module.exports = router;
