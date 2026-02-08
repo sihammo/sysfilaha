@@ -32,6 +32,7 @@ const api = {
 
     farmer: {
         getStats: () => api.request('/farmer/stats'),
+        getMenuStats: () => api.request('/farmer/menu-stats'),
 
         // Crops
         getCrops: () => api.request('/farmer/crops'),

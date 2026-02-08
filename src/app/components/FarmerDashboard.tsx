@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "../utils/cn";
+import api from "../utils/api";
 
 type View = "dashboard" | "crops" | "sales" | "resources" | "reports" | "ai" | "livestock";
 
@@ -38,15 +39,34 @@ export default function FarmerDashboard({ currentUser, onLogout }: FarmerDashboa
   const [currentView, setCurrentView] = useState<View>("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [menuStats, setMenuStats] = useState<any>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+
+  useEffect(() => {
+    const fetchMenuStats = async () => {
+      try {
+        const data = await api.farmer.getMenuStats();
+        setMenuStats(data);
+      } catch (error) {
+        console.error("Failed to fetch menu stats:", error);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+    fetchMenuStats();
+    // Refresh stats every 2 minutes
+    const interval = setInterval(fetchMenuStats, 120000);
+    return () => clearInterval(interval);
+  }, []);
 
   const menuItems = [
     { id: "dashboard" as View, label: "لوحة التحكم", icon: LayoutDashboard, color: "text-blue-500" },
-    { id: "crops" as View, label: "المحاصيل الزراعية", icon: Sprout, color: "text-green-500" },
-    { id: "livestock" as View, label: "إدارة المواشي", icon: Coffee, color: "text-amber-500" },
-    { id: "sales" as View, label: "المبيعات والتسويق", icon: ShoppingCart, color: "text-emerald-500" },
-    { id: "resources" as View, label: "العتاد والموارد", icon: Tractor, color: "text-orange-500" },
-    { id: "reports" as View, label: "التقارير المالية", icon: FileText, color: "text-rose-500" },
-    { id: "ai" as View, label: "الاستشارات الذكية", icon: Brain, color: "text-purple-500" },
+    { id: "crops" as View, label: "المحاصيل الزراعية", icon: Sprout, color: "text-green-500", count: menuStats?.cropsCount },
+    { id: "livestock" as View, label: "إدارة المواشي", icon: Coffee, color: "text-amber-500", count: menuStats?.livestockCount },
+    { id: "sales" as View, label: "المبيعات والتسويق", icon: ShoppingCart, color: "text-emerald-500", count: menuStats?.salesCount },
+    { id: "resources" as View, label: "العتاد والموارد", icon: Tractor, color: "text-orange-500", count: (menuStats?.equipmentCount || 0) + (menuStats?.workersCount || 0) },
+    { id: "reports" as View, label: "التقارير المالية", icon: FileText, color: "text-rose-500", count: menuStats?.reportsCount },
+    { id: "ai" as View, label: "الاستشارات الذكية", icon: Brain, color: "text-white", isSpecial: true },
   ];
 
   return (
@@ -75,7 +95,7 @@ export default function FarmerDashboard({ currentUser, onLogout }: FarmerDashboa
           )}
         </div>
 
-        <nav className="flex-1 px-4 py-4 space-y-1.5 overflow-y-auto">
+        <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
@@ -86,24 +106,41 @@ export default function FarmerDashboard({ currentUser, onLogout }: FarmerDashboa
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all group relative",
                   isActive
-                    ? "bg-primary text-white shadow-lg shadow-primary/25"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                    ? "bg-primary text-white shadow-xl shadow-primary/30"
+                    : item.isSpecial
+                      ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-600"
+                      : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                 )}
               >
-                <Icon className={cn("w-5 h-5 shrink-0 transition-transform group-hover:scale-110", isActive ? "text-white" : item.color)} />
+                <div className={cn(
+                  "p-2 rounded-lg transition-colors shrink-0",
+                  isActive || item.isSpecial ? "bg-white/20" : "bg-slate-50 group-hover:bg-white"
+                )}>
+                  <Icon className={cn("w-5 h-5", isActive || item.isSpecial ? "text-white" : item.color)} />
+                </div>
+
                 {isSidebarOpen && (
-                  <motion.span
+                  <motion.div
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="font-medium"
+                    className="flex-1 flex items-center justify-between"
                   >
-                    {item.label}
-                  </motion.span>
+                    <span className="font-bold text-sm tracking-wide">{item.label}</span>
+                    {item.count !== undefined && (
+                      <span className={cn(
+                        "px-2 py-0.5 rounded-full text-[10px] font-black min-w-[20px] text-center",
+                        isActive ? "bg-white text-primary" : "bg-slate-100 text-slate-500"
+                      )}>
+                        {isLoadingStats ? "..." : item.count}
+                      </span>
+                    )}
+                  </motion.div>
                 )}
-                {isActive && (
+
+                {isActive && !item.isSpecial && (
                   <motion.div
                     layoutId="activeIndicator"
-                    className="absolute right-0 w-1 h-6 bg-white rounded-l-full"
+                    className="absolute right-0 w-1.5 h-6 bg-white rounded-l-full"
                   />
                 )}
               </button>
@@ -233,28 +270,37 @@ export default function FarmerDashboard({ currentUser, onLogout }: FarmerDashboa
                 </Button>
               </div>
 
-              <div className="flex-1 p-4 space-y-2">
-                {menuItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        setCurrentView(item.id);
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className={cn(
-                        "w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all",
-                        currentView === item.id
-                          ? "bg-primary text-white shadow-xl shadow-primary/20"
+              <div className="flex-1 p-4 space-y-3">
+                {menuItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setCurrentView(item.id);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={cn(
+                      "w-full flex items-center justify-between px-6 py-4 rounded-2xl transition-all",
+                      currentView === item.id
+                        ? "bg-primary text-white shadow-xl shadow-primary/20"
+                        : item.isSpecial
+                          ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
                           : "text-slate-600 hover:bg-slate-50"
-                      )}
-                    >
-                      <Icon className="w-6 h-6" />
+                    )}
+                  >
+                    <div className="flex items-center gap-4">
+                      <item.icon className="w-6 h-6" />
                       <span className="font-bold text-lg">{item.label}</span>
-                    </button>
-                  );
-                })}
+                    </div>
+                    {item.count !== undefined && (
+                      <span className={cn(
+                        "px-3 py-1 rounded-full text-xs font-black",
+                        currentView === item.id ? "bg-white text-primary" : "bg-slate-100 text-slate-500"
+                      )}>
+                        {item.count}
+                      </span>
+                    )}
+                  </button>
+                ))}
               </div>
 
               <div className="p-6 border-t border-slate-100">

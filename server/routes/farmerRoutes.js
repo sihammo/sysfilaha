@@ -7,6 +7,34 @@ const Land = require('../models/Land');
 const Equipment = require('../models/Equipment');
 const Livestock = require('../models/Livestock');
 const Worker = require('../models/Worker');
+const Report = require('../models/Report');
+
+// GET /api/farmer/menu-stats
+router.get('/menu-stats', auth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const [cropsCount, livestockCount, salesCount, equipmentCount, workersCount, reportsCount] = await Promise.all([
+            Crop.countDocuments({ user: userId }),
+            Livestock.countDocuments({ user: userId }),
+            Sale.countDocuments({ user: userId }),
+            Equipment.countDocuments({ user: userId }),
+            Worker.countDocuments({ user: userId }),
+            Report.countDocuments({ user: userId })
+        ]);
+
+        res.json({
+            cropsCount,
+            livestockCount,
+            salesCount,
+            equipmentCount,
+            workersCount,
+            reportsCount
+        });
+    } catch (err) {
+        console.error('Menu stats error:', err);
+        res.status(500).send('Server error');
+    }
+});
 
 router.get('/stats', auth, async (req, res) => {
     try {
