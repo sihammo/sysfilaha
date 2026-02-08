@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Polygon, Popup, LayersControl } from "react-leaflet";
+import { MapContainer, TileLayer, Polygon, Popup, LayersControl, Marker } from "react-leaflet";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { MapPin, Leaf, Users } from "lucide-react";
 import api from "../utils/api";
@@ -34,6 +34,7 @@ interface LandInfo {
 
 export default function LeafletAdminFarmersMap() {
     const [lands, setLands] = useState<LandInfo[]>([]);
+    const [farmersWithLocation, setFarmersWithLocation] = useState<any[]>([]);
     const [stats, setStats] = useState({ approvedFarmers: 0, totalArea: 0 });
     const [isLoading, setIsLoading] = useState(true);
 
@@ -45,17 +46,29 @@ export default function LeafletAdminFarmersMap() {
         try {
             setIsLoading(true);
             const data = await api.admin.getFullData();
-            // Filter lands that have coordinates and belong to approved farmers
-            const approvedFarmerIds = new Set(data.farmers.filter((f: any) => f.status === 'approved').map((f: any) => f._id));
-            const validLands = data.lands.filter((l: any) =>
-                l.coordinates &&
-                l.coordinates.length > 2 &&
-                approvedFarmerIds.has(l.user?._id)
-            );
+
+            // 1. Get approved farmers
+            const approvedFarmers = data.farmers.filter((f: any) => f.status === 'approved');
+            const approvedFarmerIds = new Set(approvedFarmers.map((f: any) => f._id));
+
+            // 2. Filter lands (Polygons)
+            const validLands = data.lands.filter((l: any) => {
+                // Handle both populated and unpopulated user field
+                const userId = typeof l.user === 'object' ? l.user?._id : l.user;
+                return (
+                    l.coordinates &&
+                    l.coordinates.length > 2 &&
+                    approvedFarmerIds.has(userId)
+                );
+            });
+
+            // 3. Filter farmers with point locations (Markers)
+            const validMarkers = approvedFarmers.filter((f: any) => f.lat && f.lng);
 
             setLands(validLands);
+            setFarmersWithLocation(validMarkers);
             setStats({
-                approvedFarmers: approvedFarmerIds.size,
+                approvedFarmers: approvedFarmers.length,
                 totalArea: validLands.reduce((sum: number, l: any) => sum + (l.area || 0), 0)
             });
         } catch (e) {
@@ -103,9 +116,9 @@ export default function LeafletAdminFarmersMap() {
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-gray-600">توزيع المستغلات</p>
+                                <p className="text-sm text-gray-600">الأراضي الممسوحة</p>
                                 <div className="text-3xl font-bold text-blue-600 mt-1">{lands.length}</div>
-                                <p className="text-xs text-gray-500">مستغلة ممسوحة</p>
+                                <p className="text-xs text-gray-500">{farmersWithLocation.length} مواقع نقطية</p>
                             </div>
                             <MapPin className="w-8 h-8 text-blue-600 opacity-20" />
                         </div>
@@ -147,6 +160,7 @@ export default function LeafletAdminFarmersMap() {
                                 </LayersControl.BaseLayer>
                             </LayersControl>
 
+                            {/* Draw Land Polygons */}
                             {lands.map((land) => (
                                 <Polygon
                                     key={land._id}
@@ -161,15 +175,34 @@ export default function LeafletAdminFarmersMap() {
                                     <Popup>
                                         <div className="text-right font-arabic" dir="rtl">
                                             <h3 className="font-bold text-green-700 m-0">
-                                                {land.user?.firstName} {land.user?.lastName}
+                                                {typeof land.user === 'object' ? `${land.user.firstName} ${land.user.lastName}` : 'فلاح'}
                                             </h3>
                                             <p className="m-1 text-sm font-bold text-gray-700">المستغلة: {land.name || 'بدون اسم'}</p>
                                             <p className="m-1 text-sm text-gray-600">الموقع: {land.location}</p>
                                             <p className="m-0 text-amber-600 font-bold">{land.area} هكتار</p>
-                                            <p className="mt-2 text-xs text-blue-600">الهاتف: {land.user?.phone}</p>
+                                            {typeof land.user === 'object' && (
+                                                <p className="mt-2 text-xs text-blue-600">الهاتف: {land.user.phone}</p>
+                                            )}
                                         </div>
                                     </Popup>
                                 </Polygon>
+                            ))}
+
+                            {/* Draw Fallback Markers for Farmers without detailed land polygons */}
+                            {farmersWithLocation.map((farmer) => (
+                                <Marker
+                                    key={`marker-${farmer._id}`}
+                                    position={[farmer.lat, farmer.lng]}
+                                    icon={DefaultIcon}
+                                >
+                                    <Popup>
+                                        <div className="text-right font-arabic" dir="rtl">
+                                            <h3 className="font-bold text-green-700 m-0">{farmer.firstName} {farmer.lastName}</h3>
+                                            <p className="m-1 text-sm">{farmer.region}</p>
+                                            <p className="m-0 text-amber-600 font-bold">{farmer.landArea} هكتار (إجمالي)</p>
+                                        </div>
+                                    </Popup>
+                                </Marker>
                             ))}
                         </MapContainer>
                     </div>
