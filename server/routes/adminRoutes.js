@@ -112,6 +112,82 @@ router.get('/full-data', [auth, adminAuth], async (req, res) => {
     }
 });
 
+// @route   GET api/admin/monthly-growth
+// @desc    Get farmer registration growth by month
+// @access  Private/Admin
+router.get('/monthly-growth', [auth, adminAuth], async (req, res) => {
+    try {
+        const growth = await User.aggregate([
+            { $match: { role: 'farmer' } },
+            {
+                $group: {
+                    _id: {
+                        month: { $month: "$registrationDate" },
+                        year: { $year: "$registrationDate" }
+                    },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { "_id.year": 1, "_id.month": 1 } }
+        ]);
+
+        // Format for Recharts
+        const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+        const formattedData = growth.map(item => ({
+            name: months[item._id.month - 1], // Month name
+            "فلاحين جدد": item.count
+        }));
+
+        res.json(formattedData);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   GET api/admin/top-farmers
+// @desc    Get top 5 farmers by revenue
+// @access  Private/Admin
+router.get('/top-farmers', [auth, adminAuth], async (req, res) => {
+    try {
+        const topFarmers = await Sale.aggregate([
+            {
+                $group: {
+                    _id: "$user",
+                    totalRevenue: { $sum: "$totalPrice" },
+                    salesCount: { $sum: 1 }
+                }
+            },
+            { $sort: { totalRevenue: -1 } },
+            { $limit: 5 },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "farmerInfo"
+                }
+            },
+            { $unwind: "$farmerInfo" },
+            {
+                $project: {
+                    _id: 1,
+                    totalRevenue: 1,
+                    salesCount: 1,
+                    name: { $concat: ["$farmerInfo.firstName", " ", "$farmerInfo.lastName"] },
+                    region: "$farmerInfo.region",
+                    phone: "$farmerInfo.phone"
+                }
+            }
+        ]);
+
+        res.json(topFarmers);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
 // @route   DELETE api/admin/farmers/:id
 // @desc    Delete a farmer and all their data
 // @access  Private/Admin

@@ -40,11 +40,43 @@ router.get('/stats', auth, async (req, res) => {
             salesData.push({ month: monthName, مبيعات: monthlySales });
         }
 
+        const workersCount = await Worker.countDocuments({ user: req.user.id });
+        const workers = await Worker.find({ user: req.user.id });
+        const workerSalaries = workers.reduce((sum, w) => sum + (w.salary || 0), 0);
+
+        // Calculate detailed resource counts
+        const livestockCount = await Livestock.countDocuments({ user: req.user.id });
+        const equipmentCount = await Equipment.countDocuments({ user: req.user.id });
+
+        // Calculate Costs (Annualized)
+        // Assumption: Salary is monthly, Feed cost is monthly
+        const livestock = await Livestock.find({ user: req.user.id });
+        const livestockFeedCost = livestock.reduce((sum, l) => sum + (l.monthlyFeedCost || 0), 0);
+
+        const monthlyOperationalCost = workerSalaries + livestockFeedCost;
+        const totalAnnualCost = monthlyOperationalCost * 12;
+
+        const totalRevenue = sales.reduce((sum, sale) => sum + (sale.totalPrice || 0), 0);
+        const netProfit = totalRevenue - totalAnnualCost; // Simple profit calculation
+
         res.json({
             totalCrops: cropsCount,
             totalSales: sales.length,
             totalResources: landsCount + equipmentCount + livestockCount,
-            monthlyRevenue: totalRevenue,
+
+            // Detailed counts
+            workersCount,
+            equipmentCount,
+            livestockCount,
+            landsCount,
+
+            // Financials
+            totalRevenue,
+            totalAnnualCost,
+            netProfit,
+            monthlyOperationalCost,
+
+            // Charts
             cropData: cropData.length > 0 ? cropData : [{ name: "لا يوجد", value: 1 }],
             salesData
         });

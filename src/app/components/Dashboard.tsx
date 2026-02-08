@@ -13,6 +13,7 @@ import {
   ChevronRight,
   TrendingDown
 } from "lucide-react";
+import { Button } from "./ui/button";
 import FarmerLocationView from "./FarmerLocationView";
 import api from "../utils/api";
 import { toast } from "sonner";
@@ -37,7 +38,9 @@ export default function Dashboard({ userId, userRegion, userLandArea, userAddres
     totalCrops: 0,
     totalSales: 0,
     totalResources: 0,
-    monthlyRevenue: 0,
+    totalRevenue: 0,
+    netProfit: 0,
+    totalAnnualCost: 0,
     cropData: [] as { name: string, value: number }[],
     salesData: [] as { month: string, مبيعات: number }[]
   });
@@ -118,12 +121,19 @@ export default function Dashboard({ userId, userRegion, userLandArea, userAddres
           trend="+2"
         />
         <StatCard
-          title="إجمالي المبيعات"
-          value={stats.totalSales}
-          unit="عملية"
+          title="إجمالي الإيرادات"
+          value={stats.totalRevenue ? stats.totalRevenue.toLocaleString() : 0}
+          unit="د.ج"
           icon={TrendingUp}
           color="blue"
           trend="+15%"
+        />
+        <StatCard
+          title="صافي الربح التقديري"
+          value={stats.netProfit ? stats.netProfit.toLocaleString() : 0}
+          unit="د.ج"
+          icon={Coins}
+          color="emerald"
         />
         <StatCard
           title="العتاد والموارد"
@@ -131,14 +141,6 @@ export default function Dashboard({ userId, userRegion, userLandArea, userAddres
           unit="مورد"
           icon={Tractor}
           color="amber"
-        />
-        <StatCard
-          title="الإيرادات الشهرية"
-          value={stats.monthlyRevenue.toLocaleString()}
-          unit="د.ج"
-          icon={Coins}
-          color="emerald"
-          trend="+8.2%"
         />
       </div>
 

@@ -75,6 +75,8 @@ const api = {
         updateFarmer: (id: string, data: any) => api.request(`/admin/farmers/${id}`, 'PUT', data),
         getStats: () => api.request('/admin/stats'),
         getFullData: () => api.request('/admin/full-data'),
+        getMonthlyGrowth: () => api.request('/admin/monthly-growth'),
+        getTopFarmers: () => api.request('/admin/top-farmers'),
         deleteFarmer: (id: string) => api.request(`/admin/farmers/${id}`, 'DELETE'),
     }
 };

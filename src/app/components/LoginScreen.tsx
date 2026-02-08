@@ -145,8 +145,8 @@ export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenPro
       <div className="hidden lg:block relative overflow-hidden bg-primary/5">
         <div className="absolute inset-0 z-10 bg-gradient-to-l from-transparent to-black/40" />
         <img
-          src="https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&q=80&w=2070"
-          alt="Agriculture in Algeria"
+          src="https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=2070&auto=format&fit=crop"
+          alt="المزرعة النموذجية"
           className="absolute inset-0 w-full h-full object-cover scale-110 blur-[1px]"
         />
 

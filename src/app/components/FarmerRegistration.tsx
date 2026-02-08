@@ -210,17 +210,40 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
 
                   <div className="bg-slate-50 rounded-[2.5rem] overflow-hidden border border-slate-100 relative shadow-inner">
                     <LeafletLandDrawing
-                      initialCoordinates={[]}
-                      onSave={(coords, area) => {
+                      initialCoordinates={formData.coordinates}
+                      onSave={async (coords, area) => {
+                        // Optimistically set coordinates and area immediately
                         setFormData(prev => ({
                           ...prev,
                           coordinates: coords,
                           landArea: area.toString(),
-                          // Use the first point as approximate location if needed
                           lat: coords[0]?.lat,
                           lng: coords[0]?.lng
                         }));
-                        toast.success("تم حفظ إحداثيات الأرض بنجاح");
+
+                        // Fetch location details (Reverse Geocoding)
+                        if (coords.length > 0) {
+                          try {
+                            const lat = coords[0].lat;
+                            const lng = coords[0].lng;
+                            toast.loading("جاري تحديد الموقع...", { id: "geo-fetch" });
+
+                            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ar`);
+                            const data = await res.json();
+
+                            const city = data.address.city || data.address.town || data.address.village || data.address.county;
+                            const state = data.address.state;
+                            const fullAddress = city && state ? `${state}, ${city}` : (state || city || "الجزائر");
+
+                            setFormData(prev => ({ ...prev, address: fullAddress }));
+                            setSelectedRegion(state || "الجزائر");
+
+                            toast.success("تم حفظ الأرض وتحديد الموقع بنجاح", { id: "geo-fetch" });
+                          } catch (error) {
+                            console.error("Geocoding error:", error);
+                            toast.error("تم حفظ الأرض ولكن تعذر تحديد العنوان تلقائياً", { id: "geo-fetch" });
+                          }
+                        }
                       }}
                       onCancel={() => { }}
                     />
