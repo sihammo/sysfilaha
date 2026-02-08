@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import {
   Sprout,
@@ -384,7 +384,16 @@ function StatCard({ title, value, unit, icon: Icon, color, trend }: any) {
         <CardContent className="p-8 pt-10">
           <p className="text-sm font-bold text-slate-500 group-hover:text-slate-700 transition-colors">{title}</p>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-4xl font-black text-slate-900 tracking-tight">{value}</span>
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={value}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-4xl font-black text-slate-900 tracking-tight block tabular-nums"
+              >
+                {value}
+              </motion.span>
+            </AnimatePresence>
             <span className="text-sm font-bold text-slate-400">{unit}</span>
           </div>
           {trend && (

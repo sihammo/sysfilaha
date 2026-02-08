@@ -47,13 +47,13 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
     const fetchStats = async () => {
       try {
         const data = await api.admin.getDashboardStats();
-        setStats(data);
+        setStats({ ...data, systemStatus: "connected" }); // Assume connected if fetch is successful
       } catch (e) {
         setStats(prev => ({ ...prev, systemStatus: "disconnected" }));
       }
     };
     fetchStats();
-    const interval = setInterval(fetchStats, 60000); // Update every minute
+    const interval = setInterval(fetchStats, 10000); // Live update every 10 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -155,7 +155,12 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
           <div className="hidden md:flex items-center gap-6">
             <div className="flex items-center gap-4 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
               <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-emerald-500" />
+                <div className="relative">
+                  <Activity className={cn("w-4 h-4", stats.systemStatus === 'connecting' ? 'text-amber-500' : 'text-emerald-500')} />
+                  {stats.systemStatus === 'connected' && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-ping opacity-75" />
+                  )}
+                </div>
                 <span className={cn("text-xs font-bold", stats.systemStatus === 'connecting' ? 'text-amber-500' : 'text-emerald-500')}>
                   {stats.systemStatus === 'connecting' ? 'جاري الاتصال...' : 'النظام متصل'}
                 </span>
@@ -163,7 +168,16 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
               <div className="w-px h-4 bg-slate-200" />
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-blue-500" />
-                <span className="text-xs font-bold text-slate-600">{stats.totalFarmers} فلاح مسجل</span>
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={stats.totalFarmers}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-xs font-bold text-slate-600 block tabular-nums"
+                  >
+                    {stats.totalFarmers} فلاح مسجل
+                  </motion.span>
+                </AnimatePresence>
               </div>
             </div>
           </div>

@@ -38,6 +38,8 @@ export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenPro
       }
     };
     fetchStats();
+    const interval = setInterval(fetchStats, 10000); // Live update every 10 seconds
+    return () => clearInterval(interval);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -161,14 +163,32 @@ export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenPro
           <div className="space-y-2">
             <p className="text-primary-foreground/60 font-bold uppercase tracking-wider text-xs">إحصائيات المنصة</p>
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-black tabular-nums">{publicStats.totalFarmers.toLocaleString()}+</span>
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={publicStats.totalFarmers}
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-5xl font-black tabular-nums"
+                >
+                  {publicStats.totalFarmers.toLocaleString()}+
+                </motion.span>
+              </AnimatePresence>
             </div>
             <p className="text-lg font-medium opacity-80">فلاح مسجل عبر القطر الوطني</p>
           </div>
           <div className="space-y-2">
             <p className="text-primary-foreground/60 font-bold uppercase tracking-wider text-xs">المساحات المسجلة</p>
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-black tabular-nums">{Math.round(publicStats.totalArea / 1000).toLocaleString()}k</span>
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={publicStats.totalArea}
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-5xl font-black tabular-nums"
+                >
+                  {Math.round(publicStats.totalArea / 1000).toLocaleString()}k
+                </motion.span>
+              </AnimatePresence>
               <span className="text-xl font-bold opacity-60">هكتار</span>
             </div>
             <p className="text-lg font-medium opacity-80">تمت رقمنتها بالكامل</p>
