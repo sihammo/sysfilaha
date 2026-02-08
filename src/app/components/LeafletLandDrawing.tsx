@@ -1,14 +1,14 @@
 import { useEffect, useState, useRef } from "react";
-import { MapContainer, TileLayer, FeatureGroup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, useMap, LayersControl, LayerGroup } from "react-leaflet";
 import { Button } from "./ui/button";
-import { Trash2, Save, Map as MapIcon } from "lucide-react";
+import { Trash2, Save, Map as MapIcon, Crosshair, MapPin } from "lucide-react";
 import L from "leaflet";
 import "@geoman-io/leaflet-geoman-free";
 import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
 import "leaflet/dist/leaflet.css";
 import * as turf from "@turf/turf";
 
-// Fix for default marker icons in Leaflet with Webpack/Vite
+// Fix for default marker icons in Leaflet
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
@@ -29,6 +29,43 @@ interface LeafletLandDrawingProps {
     initialCoordinates?: Point[];
     onSave: (coordinates: Point[], area: number) => void;
     onCancel: () => void;
+}
+
+// Locate Me Component
+function LocateControl() {
+    const map = useMap();
+    const [locating, setLocating] = useState(false);
+
+    const handleLocate = () => {
+        setLocating(true);
+        map.locate({ setView: true, maxZoom: 16 });
+    };
+
+    useEffect(() => {
+        map.on('locationfound', (e) => {
+            setLocating(false);
+            L.marker(e.latlng).addTo(map).bindPopup("أنت هنا").openPopup();
+        });
+        map.on('locationerror', () => {
+            setLocating(false);
+            alert("فشل تحديد الموقع. تأكد من تفعيل GPS.");
+        });
+    }, [map]);
+
+    return (
+        <div className="leaflet-top leaflet-right" style={{ marginTop: "80px", marginRight: "10px" }}>
+            <div className="leaflet-control leaflet-bar">
+                <button
+                    onClick={(e) => { e.preventDefault(); handleLocate(); }}
+                    className="bg-white p-2 hover:bg-gray-100 flex items-center justify-center border-none cursor-pointer"
+                    title="حدد موقعي الحالي"
+                    disabled={locating}
+                >
+                    <Crosshair className={`w-5 h-5 ${locating ? "text-blue-500 animate-pulse" : "text-gray-700"}`} />
+                </button>
+            </div>
+        </div>
+    );
 }
 
 // Internal component to handle drawing logic with the map instance
@@ -52,6 +89,11 @@ function GeomanControl({ onPolygonChange, initialCoordinates }: {
             });
             poly.addTo(featureGroupRef.current);
             map.fitBounds(poly.getBounds());
+
+            // Calculate initial area
+            const geojson = poly.toGeoJSON();
+            const areaInSqMeters = turf.area(geojson);
+            onPolygonChange(initialCoordinates, areaInSqMeters / 10000);
         }
 
         map.pm.addControls({
@@ -76,7 +118,7 @@ function GeomanControl({ onPolygonChange, initialCoordinates }: {
                 const areaInSqMeters = turf.area(geojson);
                 const areaInHectares = areaInSqMeters / 10000;
 
-                const latlngs = layer.getLatLngs()[0] as L.LatLng[];
+                const latlngs = (layer.getLatLngs()[0] as L.LatLng[]);
                 const coords = latlngs.map(ll => ({ lat: ll.lat, lng: ll.lng }));
 
                 onPolygonChange(coords, parseFloat(areaInHectares.toFixed(2)));
@@ -124,35 +166,74 @@ export default function LeafletLandDrawing({ initialCoordinates, onSave, onCance
     };
 
     return (
-        <div className="flex flex-col h-[600px] gap-4" dir="rtl">
-            <div className="flex items-center justify-between">
-                <div className="flex gap-2">
+        <div className="flex flex-col h-[700px] gap-4" dir="rtl">
+            <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-green-100 shadow-sm">
+                <div className="flex flex-col">
+                    <h3 className="font-bold text-green-800 flex items-center gap-2">
+                        <MapPin className="w-5 h-5" /> رسم حدود الأرض الحقيقية
+                    </h3>
                     {coords.length === 0 ? (
-                        <p className="text-sm text-gray-500 bg-gray-100 p-2 rounded">استخدم أداة الرسم لتحديد حدود أرضك (OpenStreetMap)</p>
+                        <p className="text-xs text-gray-500">اختر أداة المضلع (Polygon) في الأعلى وابدأ الرسم على الخريطة</p>
                     ) : (
-                        <div className="bg-green-100 p-2 rounded flex items-center gap-2">
-                            <span className="font-bold text-green-700">المساحة: {area} هكتار</span>
+                        <div className="flex items-center gap-3 mt-1">
+                            <span className="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-bold shadow-sm animate-in zoom-in">
+                                المساحة المحددة: {area} هكتار
+                            </span>
+                            <span className="text-xs text-gray-400">({coords.length} نقاط إحداثية)</span>
                         </div>
                     )}
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" onClick={onCancel}>إلغاء</Button>
-                    <Button onClick={handleSave} disabled={coords.length < 3} className="bg-green-600 hover:bg-green-700 gap-2 font-arabic">
+                    <Button variant="outline" onClick={onCancel} className="rounded-lg">إلغاء</Button>
+                    <Button
+                        onClick={handleSave}
+                        disabled={coords.length < 3}
+                        className="bg-green-600 hover:bg-green-700 gap-2 font-arabic rounded-lg shadow-md px-6 transition-all active:scale-95"
+                    >
                         <Save className="w-4 h-4" /> حفظ الأرض
                     </Button>
                 </div>
             </div>
 
-            <div className="flex-1 relative rounded-lg overflow-hidden border-2 border-green-200 z-0">
+            <div className="flex-1 relative rounded-2xl overflow-hidden border-4 border-white shadow-xl z-0 group">
                 <MapContainer
-                    center={[28.0339, 1.6596]}
-                    zoom={5}
+                    center={[36.0, 3.0]} // North Algeria for better detail initially
+                    zoom={10}
                     style={{ height: "100%", width: "100%" }}
                 >
-                    <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
+                    <LayersControl position="topright">
+                        <LayersControl.BaseLayer checked name="خريطة الشوارع (Real Roads)">
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
+                        </LayersControl.BaseLayer>
+
+                        <LayersControl.BaseLayer name="خريطة القمر الصناعي (Satellite View)">
+                            <LayerGroup>
+                                <TileLayer
+                                    attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EBP, and the GIS User Community'
+                                    url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                                />
+                                <TileLayer
+                                    url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+                                />
+                                <TileLayer
+                                    url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}"
+                                />
+                            </LayerGroup>
+                        </LayersControl.BaseLayer>
+
+                        <LayersControl.BaseLayer name="خريطة التضاريس (Terrain View)">
+                            <TileLayer
+                                attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                url="https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg"
+                            />
+                        </LayersControl.BaseLayer>
+                    </LayersControl>
+
+                    <LocateControl />
+
                     <GeomanControl
                         onPolygonChange={handlePolygonChange}
                         initialCoordinates={initialCoordinates}
@@ -160,8 +241,14 @@ export default function LeafletLandDrawing({ initialCoordinates, onSave, onCance
                 </MapContainer>
             </div>
 
-            <div className="text-xs text-gray-500 text-center font-arabic">
-                💡 اختر أيقونة المضلع في الفوق، ثم اضغط على الخريطة لرسم الحدود. يمكنك تحريك النقاط لتعديلها.
+            <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 text-xs text-amber-800 text-right font-arabic">
+                <p className="font-bold mb-1 underline">💡 طريقة الاستخدام:</p>
+                <ul className="list-disc list-inside space-y-1 opacity-80">
+                    <li>اضغط على <b>أيقونة المضلع</b> (أول أيقونة من اليسار) لبدء الرسم.</li>
+                    <li>اضغط على <b>أيقونة الموقع</b> (على اليمين) لإيجاد مكانك الحالي بالـ GPS.</li>
+                    <li>يمكنك التبديل بين <b>خريطة القمر الصناعي</b> و<b>خريطة الطرق</b> من الزاوية العلوية اليمنى.</li>
+                    <li>بعد الرسم، يمكنك سحب النقاط لتعديل الحدود أو استخدام الممحاة للحذف.</li>
+                </ul>
             </div>
         </div>
     );
