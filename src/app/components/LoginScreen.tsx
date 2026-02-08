@@ -24,8 +24,6 @@ const Counter = ({ value }: { value: number }) => {
   return <motion.span className="text-5xl font-black tabular-nums">{display}</motion.span>;
 };
 
-const FARMER_GOAL = 10000; // Target number of farmers
-
 export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenProps) {
   const [formData, setFormData] = useState({
     identifier: "",
@@ -174,11 +172,11 @@ export default function LoginScreen({ onLogin, onRegisterClick }: LoginScreenPro
 
         <div className="relative z-10 grid grid-cols-2 gap-8 text-white">
           <div className="space-y-2">
-            <p className="text-[10px] md:text-xs font-bold text-slate-600 block tabular-nums">الأماكن المتبقية</p>
+            <p className="text-[10px] md:text-xs font-bold text-slate-600 block tabular-nums">الفلاحين المسجلين</p>
             <div className="flex items-baseline gap-2">
-              <Counter value={Math.max(0, FARMER_GOAL - publicStats.totalFarmers)} />
+              <Counter value={publicStats.totalFarmers} />
             </div>
-            <p className="text-lg font-medium opacity-80">من {FARMER_GOAL.toLocaleString()} مكان متاح</p>
+            <p className="text-lg font-medium opacity-80">فلاح مسجل عبر القطر الوطني</p>
           </div>
           <div className="space-y-2">
             <p className="text-[10px] md:text-xs font-bold text-slate-600 block tabular-nums">المساحات المسجلة</p>
