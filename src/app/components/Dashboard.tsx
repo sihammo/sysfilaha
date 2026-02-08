@@ -26,14 +26,12 @@ import { cn } from "../utils/cn";
 
 interface DashboardProps {
   userId: string;
-  userRegion?: string;
-  userLandArea?: string;
-  userAddress?: string;
+  dashboardData: any;
 }
 
 const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#6366f1"];
 
-export default function Dashboard({ userId, userRegion, userLandArea, userAddress }: DashboardProps) {
+export default function Dashboard({ userId, dashboardData }: DashboardProps) {
   const [stats, setStats] = useState({
     totalCrops: 0,
     totalSales: 0,
@@ -77,7 +75,7 @@ export default function Dashboard({ userId, userRegion, userLandArea, userAddres
     show: { opacity: 1, y: 0 }
   };
 
-  if (isLoading) {
+  if (isLoading || !dashboardData) {
     return (
       <div className="space-y-8 animate-in-fade">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -91,6 +89,8 @@ export default function Dashboard({ userId, userRegion, userLandArea, userAddres
     );
   }
 
+  const { weather, aiRecommendations, farm } = dashboardData;
+
   return (
     <motion.div
       variants={container}
@@ -101,8 +101,8 @@ export default function Dashboard({ userId, userRegion, userLandArea, userAddres
       {/* Welcome Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h2 className="text-4xl font-extrabold text-slate-900 tracking-tight">نظرة عامة</h2>
-          <p className="text-slate-500 mt-2 text-lg">أهلاً بك مجدداً. إليك تفاصيل نشاطك الفلاحي لهذا اليوم.</p>
+          <h2 className="text-4xl font-extrabold text-slate-900 tracking-tight">مستثمرتي</h2>
+          <p className="text-slate-500 mt-2 text-lg">أهلاً بك مجدداً {dashboardData.profile.name}. إليك حالة مزرعتك اليوم.</p>
         </div>
         <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl shadow-sm border border-slate-100">
           <Calendar className="w-5 h-5 text-primary" />
@@ -253,15 +253,14 @@ export default function Dashboard({ userId, userRegion, userLandArea, userAddres
 
       {/* Map and Weather Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {userRegion && (
-          <motion.div variants={item}>
-            <FarmerLocationView
-              region={userRegion}
-              landArea={userLandArea || "غير محدد"}
-              address={userAddress || "لم يتم تحديد العنوان"}
-            />
-          </motion.div>
-        )}
+        <motion.div variants={item}>
+          <FarmerLocationView
+            region={farm.wilaya}
+            landArea={farm.area}
+            address={farm.address}
+            coordinates={farm.coordinates}
+          />
+        </motion.div>
 
         <motion.div variants={item}>
           <Card className="rounded-3xl border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-gradient-to-br from-primary to-emerald-700 text-white h-full relative overflow-hidden group">
@@ -273,22 +272,21 @@ export default function Dashboard({ userId, userRegion, userLandArea, userAddres
                 <CardTitle className="text-xl font-bold flex items-center gap-2 text-white">
                   <CloudSun className="w-6 h-6" /> حالة الطقس المتوقعة
                 </CardTitle>
-                <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold">ولاية {userRegion}</span>
+                <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold">ولاية {farm.wilaya}</span>
               </div>
             </CardHeader>
             <CardContent className="p-8 pt-0 relative z-10">
               <div className="flex items-end gap-6 mb-8">
-                <div className="text-6xl font-black">24°</div>
+                <div className="text-6xl font-black">{weather.current.temp}°</div>
                 <div className="pb-2">
-                  <p className="text-xl font-bold">مشمس جزئياً</p>
-                  <p className="text-white/70">الرياح: 12 كم/س</p>
+                  <p className="text-xl font-bold">{weather.current.condition}</p>
+                  <p className="text-white/70">الرياح: {weather.current.wind}</p>
                 </div>
               </div>
-              <div className="grid grid-cols-4 gap-2 pt-6 border-t border-white/10 uppercase">
-                <WeatherDay day="الاثنين" temp="22°" />
-                <WeatherDay day="الثلاثاء" temp="24°" />
-                <WeatherDay day="الأربعاء" temp="19°" />
-                <WeatherDay day="الخميس" temp="21°" />
+              <div className="grid grid-cols-4 gap-2 pt-6 border-t border-white/10 uppercase font-bold text-center">
+                {weather.forecast.map((f: any, i: number) => (
+                  <WeatherDay key={i} day={f.day} temp={`${f.temp}°`} />
+                ))}
               </div>
               <Button className="w-full mt-8 bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-md rounded-2xl h-12 flex gap-2 font-bold">
                 مشاهدة التوقعات كاملة <ChevronRight className="w-4 h-4" />
@@ -297,6 +295,48 @@ export default function Dashboard({ userId, userRegion, userLandArea, userAddres
           </Card>
         </motion.div>
       </div>
+
+      {/* AI Recommendations Section */}
+      <motion.div variants={item} className="grid grid-cols-1 gap-6">
+        <Card className="rounded-3xl border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white overflow-hidden">
+          <CardHeader className="p-8 pb-4 border-b border-slate-50">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-emerald-100 rounded-xl text-emerald-600">
+                <TrendingUp className="w-6 h-6" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-bold text-slate-900">نصائح الذكاء الاصطناعي</CardTitle>
+                <p className="text-sm text-slate-400 mt-1">توصيات مخصصة بناءً على حالة أرضك والطقس</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-8 space-y-4">
+            {aiRecommendations.map((rec: any, idx: number) => (
+              <div
+                key={idx}
+                className={cn(
+                  "p-5 rounded-2xl border flex items-start gap-4 transition-all hover:scale-[1.01]",
+                  rec.type === 'warning' ? "bg-amber-50 border-amber-100 text-amber-800" :
+                    rec.type === 'alert' ? "bg-rose-50 border-rose-100 text-rose-800" :
+                      rec.type === 'suggestion' ? "bg-blue-50 border-blue-100 text-blue-800" :
+                        "bg-emerald-50 border-emerald-100 text-emerald-800"
+                )}
+              >
+                <div className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm",
+                  rec.type === 'warning' ? "bg-amber-200" :
+                    rec.type === 'alert' ? "bg-rose-200" :
+                      rec.type === 'suggestion' ? "bg-blue-200" :
+                        "bg-emerald-200"
+                )}>
+                  {rec.type === 'warning' ? "⚠️" : rec.type === 'alert' ? "🚨" : rec.type === 'suggestion' ? "💡" : "✨"}
+                </div>
+                <p className="font-bold leading-relaxed">{rec.message}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </motion.div>
     </motion.div>
   );
 }

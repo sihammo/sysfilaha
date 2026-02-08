@@ -39,33 +39,53 @@ export default function FarmerDashboard({ currentUser, onLogout }: FarmerDashboa
   const [currentView, setCurrentView] = useState<View>("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [menuStats, setMenuStats] = useState<any>(null);
-  const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
-    const fetchMenuStats = async () => {
-      try {
-        const data = await api.farmer.getMenuStats();
-        setMenuStats(data);
-      } catch (error) {
-        console.error("Failed to fetch menu stats:", error);
-      } finally {
-        setIsLoadingStats(false);
-      }
-    };
-    fetchMenuStats();
-    // Refresh stats every 2 minutes
-    const interval = setInterval(fetchMenuStats, 120000);
+    fetchData();
+    const interval = setInterval(fetchData, 120000);
     return () => clearInterval(interval);
   }, []);
 
+  const fetchData = async () => {
+    try {
+      const data = await api.farmer.getDashboardData();
+      setDashboardData(data);
+    } catch (error) {
+      console.error("Failed to fetch dashboard data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    try {
+      setIsSearching(true);
+      const results = await api.farmer.search(query);
+      setSearchResults(results);
+    } catch (e) {
+      console.error("Search failed");
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   const menuItems = [
     { id: "dashboard" as View, label: "لوحة التحكم", icon: LayoutDashboard, color: "text-blue-500" },
-    { id: "crops" as View, label: "المحاصيل الزراعية", icon: Sprout, color: "text-green-500", count: menuStats?.cropsCount },
-    { id: "livestock" as View, label: "إدارة المواشي", icon: Coffee, color: "text-amber-500", count: menuStats?.livestockCount },
-    { id: "sales" as View, label: "المبيعات والتسويق", icon: ShoppingCart, color: "text-emerald-500", count: menuStats?.salesCount },
-    { id: "resources" as View, label: "العتاد والموارد", icon: Tractor, color: "text-orange-500", count: (menuStats?.equipmentCount || 0) + (menuStats?.workersCount || 0) },
-    { id: "reports" as View, label: "التقارير المالية", icon: FileText, color: "text-rose-500", count: menuStats?.reportsCount },
+    { id: "crops" as View, label: "المحاصيل الزراعية", icon: Sprout, color: "text-green-500", count: dashboardData?.menuStats?.cropsCount },
+    { id: "livestock" as View, label: "إدارة المواشي", icon: Coffee, color: "text-amber-500", count: dashboardData?.menuStats?.livestockCount },
+    { id: "sales" as View, label: "المبيعات والتسويق", icon: ShoppingCart, color: "text-emerald-500", count: dashboardData?.menuStats?.salesCount },
+    { id: "resources" as View, label: "العتاد والموارد", icon: Tractor, color: "text-orange-500", count: (dashboardData?.menuStats?.equipmentCount || 0) + (dashboardData?.menuStats?.workersCount || 0) },
+    { id: "reports" as View, label: "التقارير المالية", icon: FileText, color: "text-rose-500", count: dashboardData?.menuStats?.reportsCount },
     { id: "ai" as View, label: "الاستشارات الذكية", icon: Brain, color: "text-white", isSpecial: true },
   ];
 
@@ -131,7 +151,7 @@ export default function FarmerDashboard({ currentUser, onLogout }: FarmerDashboa
                         "px-2 py-0.5 rounded-full text-[10px] font-black min-w-[20px] text-center",
                         isActive ? "bg-white text-primary" : "bg-slate-100 text-slate-500"
                       )}>
-                        {isLoadingStats ? "..." : item.count}
+                        {isLoading ? "..." : item.count}
                       </span>
                     )}
                   </motion.div>
@@ -169,13 +189,44 @@ export default function FarmerDashboard({ currentUser, onLogout }: FarmerDashboa
             <span className="font-bold text-lg">سيس فلاح</span>
           </div>
 
-          <div className="hidden md:flex items-center bg-slate-100 rounded-xl px-3 py-2 w-96 border border-slate-200/50 group focus-within:ring-2 ring-primary/20 transition-all">
-            <Search className="w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="ابحث عن المحاصيل، الموارد، أو التقارير..."
-              className="bg-transparent border-none outline-none px-3 w-full text-sm placeholder:text-slate-400"
-            />
+          <div className="hidden md:flex flex-col relative">
+            <div className="flex items-center bg-slate-100 rounded-xl px-3 py-2 w-96 border border-slate-200/50 group focus-within:ring-2 ring-primary/20 transition-all">
+              <Search className="w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                placeholder="ابحث عن المحاصيل، الموارد، أو المبيعات..."
+                className="bg-transparent border-none outline-none px-3 w-full text-sm placeholder:text-slate-400"
+              />
+              {isSearching && <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />}
+            </div>
+
+            <AnimatePresence>
+              {searchResults.length > 0 && searchQuery.length >= 2 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute top-full right-0 mt-2 w-full bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-50 py-2"
+                >
+                  {searchResults.map((res: any, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setCurrentView(res.type === 'crop' ? 'crops' : res.type === 'livestock' ? 'livestock' : res.type === 'sale' ? 'sales' : 'resources');
+                        setSearchQuery("");
+                        setSearchResults([]);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors text-right"
+                    >
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{res.label}</span>
+                      <span className="font-bold text-slate-700">{res.name}</span>
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <div className="flex items-center gap-3">
@@ -193,11 +244,15 @@ export default function FarmerDashboard({ currentUser, onLogout }: FarmerDashboa
 
             <div className="flex items-center gap-3 pl-2">
               <div className="text-left hidden md:block">
-                <p className="text-sm font-bold text-slate-900 leading-none">{currentUser.firstName} {currentUser.lastName}</p>
-                <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider">مكتب {currentUser.region || "وطني"}</p>
+                <p className="text-sm font-bold text-slate-900 leading-none">{dashboardData?.profile?.name || `${currentUser.firstName} ${currentUser.lastName}`}</p>
+                <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider">ولاية {dashboardData?.profile?.location || currentUser.region || "وطني"}</p>
               </div>
               <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 hover:bg-slate-200 transition-colors cursor-pointer group">
-                <User className="w-5 h-5 text-slate-600 transition-transform group-hover:scale-110" />
+                {dashboardData?.profile?.avatar ? (
+                  <img src={dashboardData.profile.avatar} className="w-full h-full rounded-xl object-cover" />
+                ) : (
+                  <User className="w-5 h-5 text-slate-600 transition-transform group-hover:scale-110" />
+                )}
               </div>
               <Button
                 variant="ghost"
@@ -226,9 +281,7 @@ export default function FarmerDashboard({ currentUser, onLogout }: FarmerDashboa
                 {currentView === "dashboard" && (
                   <Dashboard
                     userId={currentUser.id}
-                    userRegion={currentUser.region}
-                    userLandArea={currentUser.landArea}
-                    userAddress={currentUser.address}
+                    dashboardData={dashboardData}
                   />
                 )}
                 {currentView === "crops" && <CropsManagement userId={currentUser.id} />}
