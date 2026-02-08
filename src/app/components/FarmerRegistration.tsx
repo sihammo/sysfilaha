@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "./ui/textarea";
-import LeafletLocationPicker from "./LeafletLocationPicker";
+import LeafletLandDrawing from "./LeafletLandDrawing";
 import { cn } from "../utils/cn";
 
 interface FarmerRegistrationProps {
@@ -43,6 +43,7 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
     crops: "",
     lat: null as number | null,
     lng: null as number | null,
+    coordinates: [] as { lat: number; lng: number }[],
   });
 
   const [selectedRegion, setSelectedRegion] = useState("");
@@ -208,17 +209,21 @@ export default function FarmerRegistration({ onRegister, onCancel }: FarmerRegis
                   </header>
 
                   <div className="bg-slate-50 rounded-[2.5rem] overflow-hidden border border-slate-100 relative shadow-inner">
-                    <LeafletLocationPicker
-                      selectedRegion={selectedRegion}
-                      onLocationSelect={(region, lat, lng) => {
-                        setSelectedRegion(region);
-                        setFormData(prev => ({ ...prev, address: region, lat, lng }));
+                    <LeafletLandDrawing
+                      initialCoordinates={[]}
+                      onSave={(coords, area) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          coordinates: coords,
+                          landArea: area.toString(),
+                          // Use the first point as approximate location if needed
+                          lat: coords[0]?.lat,
+                          lng: coords[0]?.lng
+                        }));
+                        toast.success("تم حفظ إحداثيات الأرض بنجاح");
                       }}
+                      onCancel={() => { }}
                     />
-                    <div className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-200 shadow-sm z-[1000]">
-                      <span className="text-xs font-bold text-slate-400 ml-2">المنطقة المحددة:</span>
-                      <span className="text-sm font-black text-emerald-600">{selectedRegion || "لم تكتشف بعد"}</span>
-                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-6">

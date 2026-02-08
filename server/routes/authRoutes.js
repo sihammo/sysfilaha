@@ -3,12 +3,13 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Land = require('../models/Land');
 
 // @route   POST api/auth/register
 // @desc    Register user
 // @access  Public
 router.post('/register', async (req, res) => {
-    const { firstName, lastName, nationalId, farmerCardNumber, password, phone, email, address, landArea, region, crops } = req.body;
+    const { firstName, lastName, nationalId, farmerCardNumber, password, phone, email, address, landArea, region, crops, coordinates } = req.body;
 
     try {
         let user = await User.findOne({ nationalId });
@@ -36,6 +37,19 @@ router.post('/register', async (req, res) => {
         user.password = await bcrypt.hash(password, salt);
 
         await user.save();
+
+        // Create Land if coordinates exist
+        if (coordinates && Array.isArray(coordinates) && coordinates.length > 2) {
+            const newLand = new Land({
+                user: user._id,
+                name: `أرض ${user.firstName}`,
+                area: parseFloat(landArea) || 0,
+                location: user.address || user.region || 'غير محدد',
+                coordinates: coordinates
+            });
+            await newLand.save();
+            console.log(`Land created for user ${user._id} with ${coordinates.length} points`);
+        }
 
         res.json({ msg: 'Registration successful, pending approval', user });
     } catch (err) {
