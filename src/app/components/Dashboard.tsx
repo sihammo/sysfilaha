@@ -99,15 +99,37 @@ export default function Dashboard({ userId, dashboardData }: DashboardProps) {
       className="space-y-8 pb-10"
     >
       {/* Welcome Section */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h2 className="text-4xl font-extrabold text-slate-900 tracking-tight">مستثمرتي</h2>
-          <p className="text-slate-500 mt-2 text-lg">أهلاً بك مجدداً {dashboardData.profile.name}. إليك حالة مزرعتك اليوم.</p>
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <h2 className="text-4xl font-extrabold text-slate-900 tracking-tight">مستثمرتي</h2>
+            <p className="text-slate-500 mt-2 text-lg">أهلاً بك مجدداً {dashboardData.profile.name}. إليك حالة مزرعتك اليوم.</p>
+          </div>
+          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl shadow-sm border border-slate-100">
+            <Calendar className="w-5 h-5 text-primary" />
+            <span className="text-sm font-bold text-slate-700">{new Date().toLocaleDateString('ar-DZ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl shadow-sm border border-slate-100">
-          <Calendar className="w-5 h-5 text-primary" />
-          <span className="text-sm font-bold text-slate-700">{new Date().toLocaleDateString('ar-DZ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-        </div>
+
+        {/* Hero Banner Image */}
+        <motion.div
+          variants={item}
+          className="relative h-48 md:h-64 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-emerald-200/50"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+            alt="Farm Hero"
+            className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          <div className="absolute bottom-6 right-6 text-white">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              <span className="text-xs font-bold uppercase tracking-widest opacity-80">الوضع الراهن لمزرعتك</span>
+            </div>
+            <h3 className="text-2xl font-black">موسم الحصاد الرقمي 2026</h3>
+          </div>
+        </motion.div>
       </div>
 
       {/* Stats Cards */}
