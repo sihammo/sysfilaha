@@ -8,6 +8,7 @@ const Equipment = require('../models/Equipment');
 const Livestock = require('../models/Livestock');
 const Worker = require('../models/Worker');
 const Report = require('../models/Report');
+const User = require('../models/User');
 
 // GET /api/farmer/menu-stats
 router.get('/menu-stats', auth, async (req, res) => {
@@ -105,7 +106,7 @@ router.get('/stats', auth, async (req, res) => {
         });
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -115,7 +116,7 @@ router.get('/crops', auth, async (req, res) => {
         const crops = await Crop.find({ user: req.user.id });
         res.json(crops);
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -125,7 +126,7 @@ router.post('/crops', auth, async (req, res) => {
         const crop = await newCrop.save();
         res.json(crop);
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -139,7 +140,7 @@ router.put('/crops/:id', auth, async (req, res) => {
         if (!crop) return res.status(404).json({ msg: 'Crop not found' });
         res.json(crop);
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -149,7 +150,7 @@ router.delete('/crops/:id', auth, async (req, res) => {
         if (!crop) return res.status(404).json({ msg: 'Crop not found' });
         res.json({ msg: 'Crop removed' });
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -159,7 +160,7 @@ router.get('/sales', auth, async (req, res) => {
         const sales = await Sale.find({ user: req.user.id });
         res.json(sales);
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -169,7 +170,7 @@ router.post('/sales', auth, async (req, res) => {
         const sale = await newSale.save();
         res.json(sale);
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -183,7 +184,7 @@ router.put('/sales/:id', auth, async (req, res) => {
         if (!sale) return res.status(404).json({ msg: 'Sale not found' });
         res.json(sale);
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -193,7 +194,7 @@ router.delete('/sales/:id', auth, async (req, res) => {
         if (!sale) return res.status(404).json({ msg: 'Sale not found' });
         res.json({ msg: 'Sale removed' });
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -203,7 +204,7 @@ router.get('/lands', auth, async (req, res) => {
         const lands = await Land.find({ user: req.user.id });
         res.json(lands);
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -213,7 +214,7 @@ router.post('/lands', auth, async (req, res) => {
         const land = await newLand.save();
         res.json(land);
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -227,7 +228,7 @@ router.put('/lands/:id', auth, async (req, res) => {
         if (!land) return res.status(404).json({ msg: 'Land not found' });
         res.json(land);
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -237,7 +238,7 @@ router.delete('/lands/:id', auth, async (req, res) => {
         if (!land) return res.status(404).json({ msg: 'Land not found' });
         res.json({ msg: 'Land removed' });
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -247,7 +248,7 @@ router.get('/equipment', auth, async (req, res) => {
         const equipment = await Equipment.find({ user: req.user.id });
         res.json(equipment);
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -257,7 +258,7 @@ router.post('/equipment', auth, async (req, res) => {
         const eq = await newEq.save();
         res.json(eq);
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -271,7 +272,7 @@ router.put('/equipment/:id', auth, async (req, res) => {
         if (!eq) return res.status(404).json({ msg: 'Equipment not found' });
         res.json(eq);
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -281,7 +282,7 @@ router.delete('/equipment/:id', auth, async (req, res) => {
         if (!eq) return res.status(404).json({ msg: 'Equipment not found' });
         res.json({ msg: 'Equipment removed' });
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -291,7 +292,7 @@ router.get('/livestock', auth, async (req, res) => {
         const livestock = await Livestock.find({ user: req.user.id });
         res.json(livestock);
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -301,7 +302,7 @@ router.post('/livestock', auth, async (req, res) => {
         const lv = await newLv.save();
         res.json(lv);
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -315,7 +316,7 @@ router.put('/livestock/:id', auth, async (req, res) => {
         if (!lv) return res.status(404).json({ msg: 'Livestock not found' });
         res.json(lv);
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -325,7 +326,7 @@ router.delete('/livestock/:id', auth, async (req, res) => {
         if (!lv) return res.status(404).json({ msg: 'Livestock not found' });
         res.json({ msg: 'Livestock removed' });
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -335,7 +336,7 @@ router.get('/workers', auth, async (req, res) => {
         const workers = await Worker.find({ user: req.user.id });
         res.json(workers);
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -345,7 +346,7 @@ router.post('/workers', auth, async (req, res) => {
         const worker = await newWorker.save();
         res.json(worker);
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -359,7 +360,7 @@ router.put('/workers/:id', auth, async (req, res) => {
         if (!worker) return res.status(404).json({ msg: 'Worker not found' });
         res.json(worker);
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -369,7 +370,7 @@ router.delete('/workers/:id', auth, async (req, res) => {
         if (!worker) return res.status(404).json({ msg: 'Worker not found' });
         res.json({ msg: 'Worker removed' });
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -489,7 +490,7 @@ router.get('/dashboard-data', auth, async (req, res) => {
         });
     } catch (err) {
         console.error('Dashboard data error:', err);
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
@@ -518,7 +519,7 @@ router.get('/search', auth, async (req, res) => {
 
         res.json(results);
     } catch (err) {
-        res.status(500).send('Server error');
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
